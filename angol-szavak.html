@@ -1,0 +1,2100 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1c1f26">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Angol szavak">
+<title>Angol szavak</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --bg:#12151b; --bg2:#1a1f28; --card:#212836; --line:#2f3846;
+    --txt:#eef2f8; --dim:#98a3b5; --acc:#5ba8ff; --acc2:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    --r:16px;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-text-size-adjust:100%; overscroll-behavior-y:contain;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:12px 14px 32px;min-height:100%;display:flex;flex-direction:column}
+
+  header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.2px;flex:1}
+  .tabs{display:flex;gap:6px}
+  .tab{background:var(--bg2);border:1px solid var(--line);color:var(--dim);padding:7px 12px;border-radius:999px;font-size:13px;cursor:pointer}
+  .tab.on{background:var(--acc);border-color:var(--acc);color:#08111f;font-weight:600}
+
+  .bar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  select,input,textarea{
+    background:var(--bg2);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:9px 11px;font-size:15px;font-family:inherit;outline:none;
+  }
+  select:focus,input:focus,textarea:focus{border-color:var(--acc)}
+  label.small{font-size:12px;color:var(--dim);display:block;margin:0 0 4px 2px}
+
+  /* --- kártya --- */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    padding:28px 20px 22px;text-align:center;position:relative;
+    min-height:230px;display:flex;flex-direction:column;justify-content:center;gap:10px;
+    touch-action:pan-y;user-select:none;
+  }
+  .topic{position:absolute;top:10px;left:14px;font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+  .count{position:absolute;top:10px;right:14px;font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .en{font-size:clamp(30px,9vw,46px);font-weight:700;line-height:1.1;word-break:break-word}
+  .hu{font-size:clamp(18px,5vw,24px);color:var(--acc2);font-weight:500}
+  .ph{font-size:15px;color:var(--dim)}
+  .ph b{color:var(--txt);font-weight:600}
+  .speaking .en{color:var(--acc)}
+
+  .row{display:flex;gap:8px;margin-top:10px}
+  button{
+    font-family:inherit;font-size:15px;cursor:pointer;border-radius:12px;
+    border:1px solid var(--line);background:var(--bg2);color:var(--txt);padding:13px 14px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button:active{transform:translateY(1px)}
+  button.primary{background:var(--acc);border-color:var(--acc);color:#08111f;font-weight:600}
+  button.wide{flex:1}
+  button.ghost{color:var(--dim)}
+  button.on{background:var(--acc2);border-color:var(--acc2);color:#06210f;font-weight:600}
+  button:disabled{opacity:.4;cursor:default}
+
+  .hint{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5}
+  .status{margin-top:8px;font-size:13px;color:var(--warn);min-height:18px;text-align:center}
+
+  .panel{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-top:12px}
+  .panel h2{font-size:14px;margin:0 0 10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.8px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid .full{grid-column:1/-1}
+  @media(max-width:520px){.grid{grid-template-columns:1fr}}
+  .field input,.field select{width:100%}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+  td.act{width:34px;text-align:right}
+  .del{background:none;border:none;color:var(--bad);font-size:17px;padding:2px 6px}
+  .listwrap{max-height:52vh;overflow:auto;-webkit-overflow-scrolling:touch}
+
+  .toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .toggles button{font-size:13px;padding:9px 12px}
+  .sr-note{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .hidden{display:none!important}
+  pre#diagOut{background:#0d1017;border:1px solid var(--line);border-radius:10px;padding:10px;
+    font-size:12px;line-height:1.6;color:var(--txt);white-space:pre-wrap;word-break:break-word;margin:10px 0 0}
+  .badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:999px;
+    background:#0d1017;border:1px solid var(--line);color:var(--dim);margin-left:6px}
+</style>
+</head>
+<body>
+
+<noscript>
+  <div style="background:#3b2416;border:1px solid #b4611f;border-radius:16px;
+              padding:16px;margin:14px;color:#ffd9b0;font-size:15px;line-height:1.6">
+    <b style="font-size:17px">Ez a nézet nem futtat JavaScriptet</b><br><br>
+    A program emiatt üresen jelenik meg. A fájllal nincs baj — csak <b>böngészőben</b> kell megnyitni.<br><br>
+    <b>iPhone / iPad:</b> a Fájlok app beépített előnézete (és a Gyorsnézet) nem futtat scriptet.
+    Nyisd meg egy olyan alkalmazásban, amelynek saját böngészője van, vagy tedd fel a fájlt egy webcímre,
+    és a Safariban add hozzá a kezdőképernyőhöz.<br><br>
+    <b>Windows / Mac:</b> jobb gomb a fájlon → Társítás / Megnyitás ezzel → Chrome, Edge vagy Safari.
+  </div>
+</noscript>
+
+<div class="wrap">
+
+  <header>
+    <h1>Angol szavak</h1>
+    <div class="tabs">
+      <button class="tab on" data-view="learn">Tanulás</button>
+      <button class="tab" data-view="manage">Szavak</button>
+    </div>
+  </header>
+
+  <!-- ================= TANULÁS ================= -->
+  <section id="view-learn">
+
+    <div class="bar">
+      <select id="topicFilter" style="flex:1"></select>
+      <button id="btnShuffle" class="ghost" title="Keverés">🔀</button>
+    </div>
+
+    <div class="card" id="card">
+      <div class="topic" id="cTopic"></div>
+      <div class="count" id="cCount"></div>
+      <div class="en" id="cEn">—</div>
+      <div class="hu" id="cHu"></div>
+      <div class="ph" id="cPh"></div>
+    </div>
+
+    <div class="row">
+      <button class="wide" id="btnPrev">◀ Előző</button>
+      <button class="primary" id="btnSay" style="flex:1.3">🔊 Lassan + gyorsan</button>
+      <button class="wide" id="btnNext">Következő ▶</button>
+    </div>
+
+    <div class="toggles">
+      <button id="btnAuto">🎤 Auto mód: KI</button>
+      <button id="btnAutoSpeak" class="on">🔁 Auto felolvasás: BE</button>
+      <button id="btnSlowOnly" class="ghost">🐢 Csak lassan</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="panel">
+      <h2>Hangforrás</h2>
+      <select id="srcSel" style="width:100%">
+        <option value="auto">Automatikus — Google Fordító hangjával kezd (ajánlott)</option>
+        <option value="gt">Csak Google Fordító hangja</option>
+        <option value="rec">Csak emberi brit felvétel (nem minden szóhoz van)</option>
+        <option value="gc">Csak Google Cloud TTS (API-kulcs)</option>
+        <option value="browser">Csak böngésző hangja</option>
+      </select>
+      <div class="sr-note" id="srcNow"></div>
+
+      <div style="margin-top:12px">
+        <label class="small" for="voiceSel">Böngésző hangja (tartalék — ezt mindig érdemes beállítani)</label>
+        <select id="voiceSel" style="width:100%"></select>
+        <div class="sr-note">
+          Keresd a ★ jelölteket: <b>Google UK English</b> (Chrome) vagy <b>Microsoft Sonia / Ryan — Online (Natural)</b> (Edge).
+          Ezek a jó minőségűek; a régi „Microsoft Hazel/David” gépies.
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="small">Google Cloud API-kulcs (nem kötelező — ezzel garantáltan jó a hang)</label>
+        <input id="gcKey" type="password" placeholder="AIza..." style="width:100%" autocomplete="off">
+        <label class="small" style="margin-top:8px">Cloud hang</label>
+        <select id="gcVoice" style="width:100%">
+          <option value="en-GB-Neural2-A">en-GB-Neural2-A (női)</option>
+          <option value="en-GB-Neural2-B">en-GB-Neural2-B (férfi)</option>
+          <option value="en-GB-Neural2-C">en-GB-Neural2-C (női)</option>
+          <option value="en-GB-Neural2-D">en-GB-Neural2-D (férfi)</option>
+          <option value="en-GB-Wavenet-A">en-GB-Wavenet-A (női)</option>
+          <option value="en-GB-Wavenet-B">en-GB-Wavenet-B (férfi)</option>
+          <option value="en-GB-Standard-A">en-GB-Standard-A (legolcsóbb)</option>
+        </select>
+        <div class="sr-note">A kulcs csak ebben a böngészőben tárolódik.</div>
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div class="field">
+          <label class="small">Lassú tempó: <span id="lblSlow">0,6</span></label>
+          <input type="range" id="rateSlow" min="0.3" max="0.9" step="0.05" value="0.6" style="width:100%">
+        </div>
+        <div class="field">
+          <label class="small">Normál tempó: <span id="lblFast">1,0</span></label>
+          <input type="range" id="rateFast" min="0.7" max="1.4" step="0.05" value="1" style="width:100%">
+        </div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <button class="wide ghost" id="btnTest">🎧 Meghallgatás</button>
+        <button class="wide ghost" id="btnDiag">🩺 Diagnosztika</button>
+      </div>
+      <div class="sr-note" id="srcMsg"></div>
+      <pre id="diagOut" class="hidden"></pre>
+    </div>
+
+    <div class="hint">
+      Billentyűzet: <b>←</b>/<b>→</b> lapozás, <b>Szóköz</b> felolvasás. Telefonon húzd oldalra a kártyát.<br>
+      <b>Auto mód:</b> mondd, hogy „<b>next</b>”, és a program a következő szóra lép, majd felolvassa. (Chrome / Edge szükséges; iPhone Safariban nem működik a hangfelismerés.)<br>
+      <b>Hang:</b> a Google Fordító hangjához internet kell. Ha nem szólal meg, nyisd meg a fájlt webcímről (nem <code>file://</code>), vagy válts a Hangforrásnál.
+    </div>
+  </section>
+
+  <!-- ================= SZAVAK ================= -->
+  <section id="view-manage" class="hidden">
+
+    <div class="panel">
+      <h2>Új szó hozzáadása</h2>
+      <div class="grid">
+        <div class="field"><label class="small">Angol szó</label><input id="fEn" placeholder="pl. luggage" autocomplete="off"></div>
+        <div class="field"><label class="small">Magyar jelentés</label><input id="fHu" placeholder="pl. poggyász" autocomplete="off"></div>
+        <div class="field"><label class="small">Fonetika (IPA, nem kötelező)</label><input id="fIpa" placeholder="ˈlʌɡɪdʒ" autocomplete="off"></div>
+        <div class="field"><label class="small">Magyaros kiejtés (nem kötelező)</label><input id="fPh" placeholder="laggidzs" autocomplete="off"></div>
+        <div class="field"><label class="small">Téma</label><select id="fTopic"></select></div>
+        <div class="field"><label class="small">…vagy új téma neve</label><input id="fNewTopic" placeholder="pl. Egészség" autocomplete="off"></div>
+        <div class="full"><button class="primary" id="btnAdd" style="width:100%">Hozzáadás</button></div>
+      </div>
+      <div class="sr-note" id="addMsg"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Mentés / betöltés</h2>
+      <div class="row" style="margin-top:0">
+        <button class="wide" id="btnExport">⬇ Mentés fájlba</button>
+        <button class="wide" id="btnImport">⬆ Betöltés fájlból</button>
+      </div>
+      <input type="file" id="fileIn" accept=".json,application/json" class="hidden">
+      <div class="sr-note">A szavak a böngészőben tárolódnak. Másik eszközre a mentett JSON fájlt töltsd be. A betöltés összefésüli a listákat (a meglévő szavak nem vesznek el).</div>
+      <div class="row"><button class="wide ghost" id="btnReset">↺ Alaphelyzet (gyári szólista)</button></div>
+    </div>
+
+    <div class="panel">
+      <h2>IPA ellenőrzése szótár alapján</h2>
+      <div class="sr-note" style="margin-top:0">
+        A fonetikai átírásokat a Wiktionary szótárral veti össze (internet kell hozzá).
+        Csak jelzi az eltéréseket — te döntöd el, átveszed-e. A brit alak élvez elsőbbséget.
+      </div>
+      <div class="bar" style="margin-top:10px">
+        <select id="ipaScope" style="flex:1"></select>
+      </div>
+      <div class="row" style="margin-top:0">
+        <button class="wide" id="btnIpaCheck">🔎 Ellenőrzés indítása</button>
+        <button class="wide ghost" id="btnIpaStop">■ Leállítás</button>
+      </div>
+      <div class="sr-note" id="ipaMsg"></div>
+      <div class="listwrap" id="ipaWrap" style="margin-top:8px"></div>
+      <div class="row hidden" id="ipaApplyRow">
+        <button class="wide primary" id="btnIpaApply">Kijelölt javítások átvezetése</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Szólista (<span id="mCount">0</span>)</h2>
+      <div class="bar"><select id="mFilter" style="flex:1"></select></div>
+      <div class="listwrap">
+        <table>
+          <thead><tr><th>Angol</th><th>Magyar</th><th>Kiejtés</th><th></th></tr></thead>
+          <tbody id="mBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+
+/* ============================ ADATOK ============================ */
+const SEED = [
+{t:"Könyvelés alapok",en:"accounting",hu:"számvitel, könyvelés",ipa:"əˈkaʊntɪŋ",ph:"ökauntin"},
+{t:"Könyvelés alapok",en:"bookkeeping",hu:"könyvvitel",ipa:"ˈbʊkkiːpɪŋ",ph:"bukkíping"},
+{t:"Könyvelés alapok",en:"bookkeeper",hu:"könyvelő",ipa:"ˈbʊkkiːpə",ph:"bukkípö"},
+{t:"Könyvelés alapok",en:"accountant",hu:"könyvelő, számviteli szakember",ipa:"əˈkaʊntənt",ph:"ökauntönt"},
+{t:"Könyvelés alapok",en:"chartered accountant",hu:"okleveles könyvvizsgáló",ipa:"ˈtʃɑːtəd əˈkaʊntənt",ph:"csátöd ökauntönt"},
+{t:"Könyvelés alapok",en:"ledger",hu:"főkönyv",ipa:"ˈledʒə",ph:"ledzsö"},
+{t:"Könyvelés alapok",en:"general ledger",hu:"főkönyv",ipa:"ˈdʒenrəl ˈledʒə",ph:"dzsenröl ledzsö"},
+{t:"Könyvelés alapok",en:"subledger",hu:"analitikus nyilvántartás",ipa:"ˈsʌbledʒə",ph:"szabledzsö"},
+{t:"Könyvelés alapok",en:"journal",hu:"napló",ipa:"ˈdʒɜːnl",ph:"dzsőnl"},
+{t:"Könyvelés alapok",en:"journal entry",hu:"könyvelési tétel",ipa:"ˈdʒɜːnl ˈentri",ph:"dzsőnl entri"},
+{t:"Könyvelés alapok",en:"double-entry bookkeeping",hu:"kettős könyvvitel",ipa:"ˌdʌbl ˈentri ˈbʊkkiːpɪŋ",ph:"dabl entri bukkíping"},
+{t:"Könyvelés alapok",en:"single-entry bookkeeping",hu:"egyszeres könyvvitel",ipa:"ˌsɪŋɡl ˈentri ˈbʊkkiːpɪŋ",ph:"szingl entri bukkíping"},
+{t:"Könyvelés alapok",en:"debit",hu:"tartozik, terhelés",ipa:"ˈdebɪt",ph:"debit"},
+{t:"Könyvelés alapok",en:"credit",hu:"követel, jóváírás",ipa:"ˈkredɪt",ph:"kredit"},
+{t:"Könyvelés alapok",en:"account",hu:"számla, főkönyvi számla",ipa:"əˈkaʊnt",ph:"ökaunt"},
+{t:"Könyvelés alapok",en:"chart of accounts",hu:"számlatükör",ipa:"ˌtʃɑːt əv əˈkaʊnts",ph:"csát öv ökaunc"},
+{t:"Könyvelés alapok",en:"account number",hu:"számlaszám",ipa:"əˈkaʊnt ˈnʌmbə",ph:"ökaunt nambö"},
+{t:"Könyvelés alapok",en:"trial balance",hu:"főkönyvi kivonat",ipa:"ˌtraɪəl ˈbæləns",ph:"trájöl belönsz"},
+{t:"Könyvelés alapok",en:"posting",hu:"könyvelés, feladás",ipa:"ˈpəʊstɪŋ",ph:"pousztin"},
+{t:"Könyvelés alapok",en:"entry",hu:"tétel, bejegyzés",ipa:"ˈentri",ph:"entri"},
+{t:"Könyvelés alapok",en:"transaction",hu:"gazdasági esemény, tranzakció",ipa:"trænˈzækʃn",ph:"trenzeksn"},
+{t:"Könyvelés alapok",en:"voucher",hu:"bizonylat",ipa:"ˈvaʊtʃə",ph:"vaucsö"},
+{t:"Könyvelés alapok",en:"supporting document",hu:"alapbizonylat",ipa:"səˈpɔːtɪŋ ˈdɒkjumənt",ph:"szöpótin dokjumönt"},
+{t:"Könyvelés alapok",en:"audit trail",hu:"könyvvizsgálati nyomvonal",ipa:"ˈɔːdɪt treɪl",ph:"ódit trejl"},
+{t:"Könyvelés alapok",en:"accrual",hu:"időbeli elhatárolás",ipa:"əˈkruːəl",ph:"ökrúöl"},
+{t:"Könyvelés alapok",en:"accrual basis",hu:"eredményszemlélet",ipa:"əˈkruːəl ˈbeɪsɪs",ph:"ökrúöl bejszisz"},
+{t:"Könyvelés alapok",en:"cash basis",hu:"pénzforgalmi szemlélet",ipa:"kæʃ ˈbeɪsɪs",ph:"kes bejszisz"},
+{t:"Könyvelés alapok",en:"matching principle",hu:"összemérés elve",ipa:"ˈmætʃɪŋ ˈprɪnsəpl",ph:"mecsin prinszöpl"},
+{t:"Könyvelés alapok",en:"going concern",hu:"a vállalkozás folytatásának elve",ipa:"ˌɡəʊɪŋ kənˈsɜːn",ph:"gouin könszőn"},
+{t:"Könyvelés alapok",en:"prudence",hu:"óvatosság elve",ipa:"ˈpruːdns",ph:"prúdnsz"},
+{t:"Könyvelés alapok",en:"materiality",hu:"lényegesség",ipa:"məˌtɪəriˈæləti",ph:"mötiörieliti"},
+{t:"Könyvelés alapok",en:"consistency",hu:"következetesség",ipa:"kənˈsɪstənsi",ph:"könszisztönszi"},
+{t:"Könyvelés alapok",en:"comparability",hu:"összehasonlíthatóság",ipa:"ˌkɒmpərəˈbɪləti",ph:"kompöröbiliti"},
+{t:"Könyvelés alapok",en:"substance over form",hu:"tartalom elsődlegessége",ipa:"ˈsʌbstəns ˈəʊvə fɔːm",ph:"szabsztönsz ouvö fóm"},
+{t:"Könyvelés alapok",en:"fiscal year",hu:"üzleti év",ipa:"ˈfɪskl jɪə",ph:"fiszkl jiö"},
+{t:"Könyvelés alapok",en:"financial year",hu:"pénzügyi év",ipa:"faɪˈnænʃl jɪə",ph:"fájnensl jiö"},
+{t:"Könyvelés alapok",en:"accounting period",hu:"beszámolási időszak",ipa:"əˈkaʊntɪŋ ˈpɪəriəd",ph:"ökauntin piöriöd"},
+{t:"Könyvelés alapok",en:"reporting date",hu:"fordulónap",ipa:"rɪˈpɔːtɪŋ deɪt",ph:"ripótin dejt"},
+{t:"Könyvelés alapok",en:"closing",hu:"zárás",ipa:"ˈkləʊzɪŋ",ph:"klouzin"},
+{t:"Könyvelés alapok",en:"year-end closing",hu:"év végi zárás",ipa:"ˌjɪər end ˈkləʊzɪŋ",ph:"jiörend klouzin"},
+{t:"Könyvelés alapok",en:"month-end close",hu:"havi zárás",ipa:"ˌmʌnθ end kləʊz",ph:"mansz end klouz"},
+{t:"Könyvelés alapok",en:"opening balance",hu:"nyitó egyenleg",ipa:"ˈəʊpənɪŋ ˈbæləns",ph:"oupönin belönsz"},
+{t:"Könyvelés alapok",en:"closing balance",hu:"záró egyenleg",ipa:"ˈkləʊzɪŋ ˈbæləns",ph:"klouzin belönsz"},
+{t:"Könyvelés alapok",en:"balance",hu:"egyenleg",ipa:"ˈbæləns",ph:"belönsz"},
+{t:"Könyvelés alapok",en:"reconciliation",hu:"egyeztetés",ipa:"ˌrekənsɪliˈeɪʃn",ph:"rekönszilijésn"},
+{t:"Könyvelés alapok",en:"bank reconciliation",hu:"bankegyeztetés",ipa:"bæŋk ˌrekənsɪliˈeɪʃn",ph:"benk rekönszilijésn"},
+{t:"Könyvelés alapok",en:"adjustment",hu:"helyesbítés, korrekció",ipa:"əˈdʒʌstmənt",ph:"ödzsasztmönt"},
+{t:"Könyvelés alapok",en:"adjusting entry",hu:"korrekciós tétel",ipa:"əˈdʒʌstɪŋ ˈentri",ph:"ödzsasztin entri"},
+{t:"Könyvelés alapok",en:"reversal",hu:"storno, visszavezetés",ipa:"rɪˈvɜːsl",ph:"rivőszl"},
+{t:"Könyvelés alapok",en:"write-off",hu:"leírás",ipa:"ˈraɪt ɒf",ph:"rájt of"},
+{t:"Könyvelés alapok",en:"provision",hu:"céltartalék",ipa:"prəˈvɪʒn",ph:"pröviezsn"},
+{t:"Könyvelés alapok",en:"accrued expense",hu:"passzív időbeli elhatárolás",ipa:"əˈkruːd ɪkˈspens",ph:"ökrúd ikszpensz"},
+{t:"Könyvelés alapok",en:"prepaid expense",hu:"aktív időbeli elhatárolás",ipa:"ˌpriːpeɪd ɪkˈspens",ph:"prípejd ikszpensz"},
+{t:"Könyvelés alapok",en:"deferred revenue",hu:"halasztott bevétel",ipa:"dɪˈfɜːd ˈrevənjuː",ph:"difőd revönjú"},
+{t:"Könyvelés alapok",en:"depreciation",hu:"értékcsökkenési leírás",ipa:"dɪˌpriːʃiˈeɪʃn",ph:"diprísiejsn"},
+{t:"Könyvelés alapok",en:"amortisation",hu:"amortizáció",ipa:"əˌmɔːtaɪˈzeɪʃn",ph:"ömótájzejsn"},
+{t:"Könyvelés alapok",en:"impairment",hu:"értékvesztés",ipa:"ɪmˈpeəmənt",ph:"impeömönt"},
+{t:"Könyvelés alapok",en:"revaluation",hu:"átértékelés",ipa:"ˌriːvæljuˈeɪʃn",ph:"rívelyuejsn"},
+{t:"Könyvelés alapok",en:"book value",hu:"könyv szerinti érték",ipa:"ˈbʊk væljuː",ph:"buk velyú"},
+{t:"Könyvelés alapok",en:"historical cost",hu:"bekerülési érték",ipa:"hɪˈstɒrɪkl kɒst",ph:"hisztorikl koszt"},
+{t:"Könyvelés alapok",en:"fair value",hu:"valós érték",ipa:"feə ˈvæljuː",ph:"feö velyú"},
+{t:"Könyvelés alapok",en:"residual value",hu:"maradványérték",ipa:"rɪˈzɪdjuəl ˈvæljuː",ph:"rizidjuöl velyú"},
+{t:"Könyvelés alapok",en:"useful life",hu:"hasznos élettartam",ipa:"ˈjuːsfl laɪf",ph:"júszfl lájf"},
+{t:"Könyvelés alapok",en:"straight-line method",hu:"lineáris leírás",ipa:"ˌstreɪt laɪn ˈmeθəd",ph:"sztrejt lájn meszöd"},
+{t:"Könyvelés alapok",en:"declining balance",hu:"degresszív leírás",ipa:"dɪˈklaɪnɪŋ ˈbæləns",ph:"diklájnin belönsz"},
+{t:"Könyvelés alapok",en:"inventory",hu:"készlet",ipa:"ˈɪnvəntri",ph:"invöntri"},
+{t:"Könyvelés alapok",en:"stocktaking",hu:"leltározás",ipa:"ˈstɒkteɪkɪŋ",ph:"sztokteikin"},
+{t:"Könyvelés alapok",en:"physical count",hu:"fizikai leltár",ipa:"ˈfɪzɪkl kaʊnt",ph:"fizikl kaunt"},
+{t:"Könyvelés alapok",en:"asset",hu:"eszköz",ipa:"ˈæset",ph:"eszet"},
+{t:"Könyvelés alapok",en:"liability",hu:"kötelezettség",ipa:"ˌlaɪəˈbɪləti",ph:"lájöbiliti"},
+{t:"Könyvelés alapok",en:"equity",hu:"saját tőke",ipa:"ˈekwəti",ph:"ekvöti"},
+{t:"Könyvelés alapok",en:"capital",hu:"tőke",ipa:"ˈkæpɪtl",ph:"kepitl"},
+{t:"Könyvelés alapok",en:"revenue",hu:"árbevétel",ipa:"ˈrevənjuː",ph:"revönjú"},
+{t:"Könyvelés alapok",en:"income",hu:"jövedelem, bevétel",ipa:"ˈɪnkʌm",ph:"inkam"},
+{t:"Könyvelés alapok",en:"expense",hu:"költség, ráfordítás",ipa:"ɪkˈspens",ph:"ikszpensz"},
+{t:"Könyvelés alapok",en:"cost",hu:"költség",ipa:"kɒst",ph:"koszt"},
+{t:"Könyvelés alapok",en:"profit",hu:"nyereség",ipa:"ˈprɒfɪt",ph:"profit"},
+{t:"Könyvelés alapok",en:"loss",hu:"veszteség",ipa:"lɒs",ph:"losz"},
+{t:"Könyvelés alapok",en:"turnover",hu:"árbevétel, forgalom",ipa:"ˈtɜːnəʊvə",ph:"tőnouvö"},
+{t:"Könyvelés alapok",en:"financial statements",hu:"beszámoló",ipa:"faɪˈnænʃl ˈsteɪtmənts",ph:"fájnensl sztejtmönc"},
+{t:"Könyvelés alapok",en:"annual report",hu:"éves beszámoló",ipa:"ˈænjuəl rɪˈpɔːt",ph:"enyuöl ripót"},
+{t:"Könyvelés alapok",en:"notes to the accounts",hu:"kiegészítő melléklet",ipa:"nəʊts tə ði əˈkaʊnts",ph:"nouc tö dí ökaunc"},
+{t:"Könyvelés alapok",en:"disclosure",hu:"közzététel",ipa:"dɪsˈkləʊʒə",ph:"diszklouzsö"},
+{t:"Könyvelés alapok",en:"to record",hu:"rögzíteni, könyvelni",ipa:"rɪˈkɔːd",ph:"rikód"},
+{t:"Könyvelés alapok",en:"to post",hu:"feladni, lekönyvelni",ipa:"pəʊst",ph:"pouszt"},
+{t:"Könyvelés alapok",en:"to reconcile",hu:"egyeztetni",ipa:"ˈrekənsaɪl",ph:"rekönszájl"},
+{t:"Könyvelés alapok",en:"to accrue",hu:"elhatárolni, felhalmozódni",ipa:"əˈkruː",ph:"ökrú"},
+{t:"Könyvelés alapok",en:"to allocate",hu:"felosztani",ipa:"ˈæləkeɪt",ph:"elökejt"},
+{t:"Könyvelés alapok",en:"to capitalise",hu:"aktiválni",ipa:"ˈkæpɪtəlaɪz",ph:"kepitölájz"},
+{t:"Könyvelés alapok",en:"to offset",hu:"beszámítani",ipa:"ˈɒfset",ph:"ofszet"},
+{t:"Könyvelés alapok",en:"to settle",hu:"kiegyenlíteni",ipa:"ˈsetl",ph:"szetl"},
+{t:"Könyvelés alapok",en:"outstanding",hu:"kintlévő, rendezetlen",ipa:"aʊtˈstændɪŋ",ph:"autsztendin"},
+{t:"Könyvelés alapok",en:"overdue",hu:"lejárt, késedelmes",ipa:"ˌəʊvəˈdjuː",ph:"ouvödjú"},
+{t:"Mérleg",en:"balance sheet",hu:"mérleg",ipa:"ˈbæləns ʃiːt",ph:"belönsz sít"},
+{t:"Mérleg",en:"statement of financial position",hu:"mérleg (IFRS)",ipa:"ˈsteɪtmənt əv faɪˈnænʃl pəˈzɪʃn",ph:"sztejtmönt öv fájnensl pözisn"},
+{t:"Mérleg",en:"current assets",hu:"forgóeszközök",ipa:"ˈkʌrənt ˈæsets",ph:"karönt eszec"},
+{t:"Mérleg",en:"non-current assets",hu:"befektetett eszközök",ipa:"ˌnɒn ˈkʌrənt ˈæsets",ph:"non karönt eszec"},
+{t:"Mérleg",en:"fixed assets",hu:"tárgyi eszközök",ipa:"ˌfɪkst ˈæsets",ph:"fikszt eszec"},
+{t:"Mérleg",en:"tangible assets",hu:"tárgyi eszközök",ipa:"ˈtændʒəbl ˈæsets",ph:"tendzsöbl eszec"},
+{t:"Mérleg",en:"intangible assets",hu:"immateriális javak",ipa:"ɪnˈtændʒəbl ˈæsets",ph:"intendzsöbl eszec"},
+{t:"Mérleg",en:"property, plant and equipment",hu:"ingatlanok és berendezések",ipa:"ˈprɒpəti plɑːnt ənd ɪˈkwɪpmənt",ph:"propöti plánt önd ikvipmönt"},
+{t:"Mérleg",en:"goodwill",hu:"üzleti vagy cégérték",ipa:"ˈɡʊdwɪl",ph:"gudvil"},
+{t:"Mérleg",en:"patent",hu:"szabadalom",ipa:"ˈpætnt",ph:"petnt"},
+{t:"Mérleg",en:"trademark",hu:"védjegy",ipa:"ˈtreɪdmɑːk",ph:"trejdmák"},
+{t:"Mérleg",en:"land",hu:"föld, telek",ipa:"lænd",ph:"lend"},
+{t:"Mérleg",en:"building",hu:"épület",ipa:"ˈbɪldɪŋ",ph:"bildin"},
+{t:"Mérleg",en:"machinery",hu:"gépek",ipa:"məˈʃiːnəri",ph:"mösínöri"},
+{t:"Mérleg",en:"equipment",hu:"berendezés",ipa:"ɪˈkwɪpmənt",ph:"ikvipmönt"},
+{t:"Mérleg",en:"vehicle",hu:"jármű",ipa:"ˈviːəkl",ph:"víökl"},
+{t:"Mérleg",en:"accumulated depreciation",hu:"halmozott értékcsökkenés",ipa:"əˈkjuːmjuleɪtɪd dɪˌpriːʃiˈeɪʃn",ph:"ökjúmjulejtid diprísiejsn"},
+{t:"Mérleg",en:"net book value",hu:"nettó könyv szerinti érték",ipa:"net ˈbʊk væljuː",ph:"net buk velyú"},
+{t:"Mérleg",en:"raw materials",hu:"alapanyagok",ipa:"ˌrɔː məˈtɪəriəlz",ph:"ró mötiöriölz"},
+{t:"Mérleg",en:"work in progress",hu:"befejezetlen termelés",ipa:"ˌwɜːk ɪn ˈprəʊɡres",ph:"vők in prougresz"},
+{t:"Mérleg",en:"finished goods",hu:"késztermék",ipa:"ˌfɪnɪʃt ˈɡʊdz",ph:"finist gudz"},
+{t:"Mérleg",en:"merchandise",hu:"áru",ipa:"ˈmɜːtʃəndaɪs",ph:"mőcsöndájsz"},
+{t:"Mérleg",en:"obsolete stock",hu:"elfekvő készlet",ipa:"ˈɒbsəliːt stɒk",ph:"obszölít sztok"},
+{t:"Mérleg",en:"receivable",hu:"követelés",ipa:"rɪˈsiːvəbl",ph:"riszívöbl"},
+{t:"Mérleg",en:"accounts receivable",hu:"vevőkövetelések",ipa:"əˈkaʊnts rɪˈsiːvəbl",ph:"ökaunc riszívöbl"},
+{t:"Mérleg",en:"trade receivables",hu:"vevőkövetelések",ipa:"treɪd rɪˈsiːvəblz",ph:"trejd riszívöblz"},
+{t:"Mérleg",en:"bad debt",hu:"behajthatatlan követelés",ipa:"ˌbæd ˈdet",ph:"bed det"},
+{t:"Mérleg",en:"doubtful debt",hu:"kétes követelés",ipa:"ˈdaʊtfl det",ph:"dautfl det"},
+{t:"Mérleg",en:"allowance for bad debts",hu:"értékvesztés követelésekre",ipa:"əˈlaʊəns fə ˌbæd ˈdets",ph:"ölauönsz fö bed dec"},
+{t:"Mérleg",en:"payable",hu:"kötelezettség",ipa:"ˈpeɪəbl",ph:"pejöbl"},
+{t:"Mérleg",en:"accounts payable",hu:"szállítói tartozások",ipa:"əˈkaʊnts ˈpeɪəbl",ph:"ökaunc pejöbl"},
+{t:"Mérleg",en:"trade payables",hu:"szállítói tartozások",ipa:"treɪd ˈpeɪəblz",ph:"trejd pejöblz"},
+{t:"Mérleg",en:"current liabilities",hu:"rövid lejáratú kötelezettségek",ipa:"ˈkʌrənt ˌlaɪəˈbɪlətiz",ph:"karönt lájöbilitiz"},
+{t:"Mérleg",en:"non-current liabilities",hu:"hosszú lejáratú kötelezettségek",ipa:"ˌnɒn ˈkʌrənt ˌlaɪəˈbɪlətiz",ph:"non karönt lájöbilitiz"},
+{t:"Mérleg",en:"long-term debt",hu:"hosszú lejáratú hitel",ipa:"ˌlɒŋ tɜːm ˈdet",ph:"long tőm det"},
+{t:"Mérleg",en:"short-term debt",hu:"rövid lejáratú hitel",ipa:"ˌʃɔːt tɜːm ˈdet",ph:"sót tőm det"},
+{t:"Mérleg",en:"cash and cash equivalents",hu:"pénzeszközök",ipa:"ˌkæʃ ənd ˌkæʃ ɪˈkwɪvələnts",ph:"kes önd kes ikvivölönc"},
+{t:"Mérleg",en:"petty cash",hu:"készpénzkassza",ipa:"ˌpeti ˈkæʃ",ph:"peti kes"},
+{t:"Mérleg",en:"bank balance",hu:"bankszámla egyenleg",ipa:"bæŋk ˈbæləns",ph:"benk belönsz"},
+{t:"Mérleg",en:"share capital",hu:"jegyzett tőke",ipa:"ˈʃeə ˌkæpɪtl",ph:"seö kepitl"},
+{t:"Mérleg",en:"issued capital",hu:"kibocsátott tőke",ipa:"ˈɪʃuːd ˌkæpɪtl",ph:"isúd kepitl"},
+{t:"Mérleg",en:"subscribed capital",hu:"jegyzett tőke",ipa:"səbˈskraɪbd ˌkæpɪtl",ph:"szöbszkrájbd kepitl"},
+{t:"Mérleg",en:"share premium",hu:"tőketartalék",ipa:"ˈʃeə ˌpriːmiəm",ph:"seö prímiöm"},
+{t:"Mérleg",en:"retained earnings",hu:"eredménytartalék",ipa:"rɪˌteɪnd ˈɜːnɪŋz",ph:"ritejnd őningz"},
+{t:"Mérleg",en:"reserves",hu:"tartalékok",ipa:"rɪˈzɜːvz",ph:"rizővz"},
+{t:"Mérleg",en:"revaluation reserve",hu:"értékelési tartalék",ipa:"ˌriːvæljuˈeɪʃn rɪˈzɜːv",ph:"rívelyuejsn rizőv"},
+{t:"Mérleg",en:"net assets",hu:"nettó eszközérték",ipa:"ˌnet ˈæsets",ph:"net eszec"},
+{t:"Mérleg",en:"total assets",hu:"eszközök összesen",ipa:"ˌtəʊtl ˈæsets",ph:"toutl eszec"},
+{t:"Mérleg",en:"shareholders' equity",hu:"saját tőke",ipa:"ˈʃeəhəʊldəz ˈekwəti",ph:"seöhouldöz ekvöti"},
+{t:"Mérleg",en:"working capital",hu:"forgótőke",ipa:"ˌwɜːkɪŋ ˈkæpɪtl",ph:"vőkin kepitl"},
+{t:"Mérleg",en:"accounting equation",hu:"mérlegazonosság",ipa:"əˈkaʊntɪŋ ɪˈkweɪʒn",ph:"ökauntin ikvejzsn"},
+{t:"Mérleg",en:"solvency",hu:"fizetőképesség",ipa:"ˈsɒlvənsi",ph:"szolvönszi"},
+{t:"Mérleg",en:"insolvency",hu:"fizetésképtelenség",ipa:"ɪnˈsɒlvənsi",ph:"inszolvönszi"},
+{t:"Mérleg",en:"liquidity",hu:"likviditás",ipa:"lɪˈkwɪdəti",ph:"likviditi"},
+{t:"Mérleg",en:"gearing",hu:"tőkeáttétel",ipa:"ˈɡɪərɪŋ",ph:"giörin"},
+{t:"Mérleg",en:"leverage",hu:"tőkeáttétel",ipa:"ˈliːvərɪdʒ",ph:"lívöridzs"},
+{t:"Mérleg",en:"current ratio",hu:"likviditási ráta",ipa:"ˈkʌrənt ˈreɪʃiəʊ",ph:"karönt rejsiou"},
+{t:"Mérleg",en:"quick ratio",hu:"gyorsráta",ipa:"ˈkwɪk ˈreɪʃiəʊ",ph:"kvik rejsiou"},
+{t:"Mérleg",en:"mortgage",hu:"jelzálog",ipa:"ˈmɔːɡɪdʒ",ph:"mógidzs"},
+{t:"Mérleg",en:"lien",hu:"zálogjog",ipa:"ˈliːən",ph:"líön"},
+{t:"Mérleg",en:"collateral",hu:"fedezet, biztosíték",ipa:"kəˈlætərəl",ph:"köletöröl"},
+{t:"Mérleg",en:"pledge",hu:"zálog",ipa:"pledʒ",ph:"pledzs"},
+{t:"Mérleg",en:"guarantee",hu:"garancia, kezesség",ipa:"ˌɡærənˈtiː",ph:"gerönti"},
+{t:"Mérleg",en:"contingent liability",hu:"függő kötelezettség",ipa:"kənˈtɪndʒənt ˌlaɪəˈbɪləti",ph:"köntindzsönt lájöbiliti"},
+{t:"Mérleg",en:"off-balance-sheet",hu:"mérlegen kívüli",ipa:"ˌɒf ˈbæləns ʃiːt",ph:"of belönsz sít"},
+{t:"Mérleg",en:"deposit",hu:"letét, előleg",ipa:"dɪˈpɒzɪt",ph:"dipozit"},
+{t:"Mérleg",en:"advance payment",hu:"előleg",ipa:"ədˈvɑːns ˈpeɪmənt",ph:"ödvánsz pejmönt"},
+{t:"Mérleg",en:"accrued liabilities",hu:"passzív elhatárolások",ipa:"əˈkruːd ˌlaɪəˈbɪlətiz",ph:"ökrúd lájöbilitiz"},
+{t:"Mérleg",en:"deferred tax",hu:"halasztott adó",ipa:"dɪˈfɜːd tæks",ph:"difőd teksz"},
+{t:"Mérleg",en:"deferred tax asset",hu:"halasztott adókövetelés",ipa:"dɪˈfɜːd tæks ˈæset",ph:"difőd teksz eszet"},
+{t:"Mérleg",en:"investment property",hu:"befektetési célú ingatlan",ipa:"ɪnˈvestmənt ˈprɒpəti",ph:"invesztmönt propöti"},
+{t:"Mérleg",en:"subsidiary",hu:"leányvállalat",ipa:"səbˈsɪdiəri",ph:"szöbszidiöri"},
+{t:"Mérleg",en:"associate",hu:"társult vállalkozás",ipa:"əˈsəʊsiət",ph:"öszousiöt"},
+{t:"Mérleg",en:"holding",hu:"részesedés",ipa:"ˈhəʊldɪŋ",ph:"houldin"},
+{t:"Mérleg",en:"minority interest",hu:"kisebbségi részesedés",ipa:"maɪˈnɒrəti ˈɪntrəst",ph:"májnoröti intröszt"},
+{t:"Mérleg",en:"consolidation",hu:"konszolidáció",ipa:"kənˌsɒlɪˈdeɪʃn",ph:"könszolidejsn"},
+{t:"Mérleg",en:"consolidated accounts",hu:"konszolidált beszámoló",ipa:"kənˈsɒlɪdeɪtɪd əˈkaʊnts",ph:"könszolidejtid ökaunc"},
+{t:"Eredménykimutatás",en:"income statement",hu:"eredménykimutatás",ipa:"ˈɪnkʌm ˈsteɪtmənt",ph:"inkam sztejtmönt"},
+{t:"Eredménykimutatás",en:"profit and loss account",hu:"eredménykimutatás",ipa:"ˌprɒfɪt ənd ˈlɒs əˌkaʊnt",ph:"profit önd losz ökaunt"},
+{t:"Eredménykimutatás",en:"sales",hu:"értékesítés, eladás",ipa:"seɪlz",ph:"szejlz"},
+{t:"Eredménykimutatás",en:"net sales",hu:"nettó árbevétel",ipa:"ˌnet ˈseɪlz",ph:"net szejlz"},
+{t:"Eredménykimutatás",en:"gross profit",hu:"bruttó fedezet",ipa:"ˌɡrəʊs ˈprɒfɪt",ph:"grousz profit"},
+{t:"Eredménykimutatás",en:"cost of goods sold",hu:"eladott áruk beszerzési értéke",ipa:"ˌkɒst əv ˌɡʊdz ˈsəʊld",ph:"koszt öv gudz szould"},
+{t:"Eredménykimutatás",en:"cost of sales",hu:"értékesítés közvetlen költsége",ipa:"ˌkɒst əv ˈseɪlz",ph:"koszt öv szejlz"},
+{t:"Eredménykimutatás",en:"operating profit",hu:"üzemi eredmény",ipa:"ˈɒpəreɪtɪŋ ˈprɒfɪt",ph:"opörejtin profit"},
+{t:"Eredménykimutatás",en:"operating expenses",hu:"működési költségek",ipa:"ˈɒpəreɪtɪŋ ɪkˈspensɪz",ph:"opörejtin ikszpenszíz"},
+{t:"Eredménykimutatás",en:"overheads",hu:"általános költségek",ipa:"ˈəʊvəhedz",ph:"ouvöhedz"},
+{t:"Eredménykimutatás",en:"administrative expenses",hu:"igazgatási költségek",ipa:"ədˈmɪnɪstrətɪv ɪkˈspensɪz",ph:"ödminisztrötiv ikszpenszíz"},
+{t:"Eredménykimutatás",en:"selling expenses",hu:"értékesítési költségek",ipa:"ˈselɪŋ ɪkˈspensɪz",ph:"szelin ikszpenszíz"},
+{t:"Eredménykimutatás",en:"distribution costs",hu:"forgalmazási költségek",ipa:"ˌdɪstrɪˈbjuːʃn kɒsts",ph:"disztribjúsn koszc"},
+{t:"Eredménykimutatás",en:"finance costs",hu:"pénzügyi ráfordítások",ipa:"ˈfaɪnæns kɒsts",ph:"fájnensz koszc"},
+{t:"Eredménykimutatás",en:"interest expense",hu:"kamatráfordítás",ipa:"ˈɪntrəst ɪkˈspens",ph:"intröszt ikszpensz"},
+{t:"Eredménykimutatás",en:"interest income",hu:"kamatbevétel",ipa:"ˈɪntrəst ˈɪnkʌm",ph:"intröszt inkam"},
+{t:"Eredménykimutatás",en:"other income",hu:"egyéb bevétel",ipa:"ˌʌðər ˈɪnkʌm",ph:"adör inkam"},
+{t:"Eredménykimutatás",en:"extraordinary item",hu:"rendkívüli tétel",ipa:"ɪkˈstrɔːdnri ˈaɪtəm",ph:"iksztródnri ájtöm"},
+{t:"Eredménykimutatás",en:"profit before tax",hu:"adózás előtti eredmény",ipa:"ˌprɒfɪt bɪˌfɔː ˈtæks",ph:"profit bifó teksz"},
+{t:"Eredménykimutatás",en:"profit after tax",hu:"adózott eredmény",ipa:"ˌprɒfɪt ˌɑːftə ˈtæks",ph:"profit áftö teksz"},
+{t:"Eredménykimutatás",en:"net profit",hu:"nettó nyereség",ipa:"ˌnet ˈprɒfɪt",ph:"net profit"},
+{t:"Eredménykimutatás",en:"net income",hu:"nettó eredmény",ipa:"ˌnet ˈɪnkʌm",ph:"net inkam"},
+{t:"Eredménykimutatás",en:"bottom line",hu:"végeredmény",ipa:"ˌbɒtəm ˈlaɪn",ph:"botöm lájn"},
+{t:"Eredménykimutatás",en:"top line",hu:"árbevétel",ipa:"ˌtɒp ˈlaɪn",ph:"top lájn"},
+{t:"Eredménykimutatás",en:"EBITDA",hu:"kamat, adó és értékcsökkenés előtti eredmény",ipa:"ˌiːbɪtˈdɑː",ph:"íbitdá"},
+{t:"Eredménykimutatás",en:"break-even point",hu:"fedezeti pont",ipa:"ˌbreɪk ˈiːvn pɔɪnt",ph:"brejk ívn point"},
+{t:"Eredménykimutatás",en:"contribution margin",hu:"fedezeti hányad",ipa:"ˌkɒntrɪˈbjuːʃn ˈmɑːdʒɪn",ph:"kontribjúsn mádzsin"},
+{t:"Eredménykimutatás",en:"margin",hu:"árrés, haszonkulcs",ipa:"ˈmɑːdʒɪn",ph:"mádzsin"},
+{t:"Eredménykimutatás",en:"markup",hu:"árrés, felár",ipa:"ˈmɑːkʌp",ph:"mákap"},
+{t:"Eredménykimutatás",en:"profit margin",hu:"nyereséghányad",ipa:"ˈprɒfɪt ˈmɑːdʒɪn",ph:"profit mádzsin"},
+{t:"Eredménykimutatás",en:"profitability",hu:"jövedelmezőség",ipa:"ˌprɒfɪtəˈbɪləti",ph:"profitöbiliti"},
+{t:"Eredménykimutatás",en:"fixed cost",hu:"állandó költség",ipa:"ˌfɪkst ˈkɒst",ph:"fikszt koszt"},
+{t:"Eredménykimutatás",en:"variable cost",hu:"változó költség",ipa:"ˌveəriəbl ˈkɒst",ph:"veöriöbl koszt"},
+{t:"Eredménykimutatás",en:"direct cost",hu:"közvetlen költség",ipa:"dəˌrekt ˈkɒst",ph:"direkt koszt"},
+{t:"Eredménykimutatás",en:"indirect cost",hu:"közvetett költség",ipa:"ˌɪndəˌrekt ˈkɒst",ph:"indirekt koszt"},
+{t:"Eredménykimutatás",en:"unit cost",hu:"önköltség",ipa:"ˈjuːnɪt kɒst",ph:"júnit koszt"},
+{t:"Eredménykimutatás",en:"cost centre",hu:"költséghely",ipa:"ˈkɒst ˌsentə",ph:"koszt szentö"},
+{t:"Eredménykimutatás",en:"profit centre",hu:"profitcentrum",ipa:"ˈprɒfɪt ˌsentə",ph:"profit szentö"},
+{t:"Eredménykimutatás",en:"cost accounting",hu:"költségszámvitel",ipa:"ˈkɒst əˌkaʊntɪŋ",ph:"koszt ökauntin"},
+{t:"Eredménykimutatás",en:"costing",hu:"kalkuláció",ipa:"ˈkɒstɪŋ",ph:"kosztin"},
+{t:"Eredménykimutatás",en:"standard cost",hu:"normaköltség",ipa:"ˈstændəd kɒst",ph:"sztendöd koszt"},
+{t:"Eredménykimutatás",en:"absorption costing",hu:"teljes költségszámítás",ipa:"əbˈsɔːpʃn ˈkɒstɪŋ",ph:"öbszópsn kosztin"},
+{t:"Eredménykimutatás",en:"marginal costing",hu:"határköltség-számítás",ipa:"ˈmɑːdʒɪnl ˈkɒstɪŋ",ph:"mádzsinl kosztin"},
+{t:"Eredménykimutatás",en:"overhead allocation",hu:"általános költség felosztása",ipa:"ˈəʊvəhed ˌæləˈkeɪʃn",ph:"ouvöhed elökejsn"},
+{t:"Eredménykimutatás",en:"labour cost",hu:"bérköltség",ipa:"ˈleɪbə kɒst",ph:"lejbö koszt"},
+{t:"Eredménykimutatás",en:"material cost",hu:"anyagköltség",ipa:"məˈtɪəriəl kɒst",ph:"mötiöriöl koszt"},
+{t:"Eredménykimutatás",en:"utilities",hu:"rezsiköltségek",ipa:"juːˈtɪlətiz",ph:"jútilitiz"},
+{t:"Eredménykimutatás",en:"rent",hu:"bérleti díj",ipa:"rent",ph:"rent"},
+{t:"Eredménykimutatás",en:"wages",hu:"munkabér",ipa:"ˈweɪdʒɪz",ph:"vejdzsiz"},
+{t:"Eredménykimutatás",en:"salaries",hu:"fizetések",ipa:"ˈsælərɪz",ph:"szelöriz"},
+{t:"Eredménykimutatás",en:"commission",hu:"jutalék",ipa:"kəˈmɪʃn",ph:"kömisn"},
+{t:"Eredménykimutatás",en:"royalty",hu:"jogdíj",ipa:"ˈrɔɪəlti",ph:"rojölti"},
+{t:"Eredménykimutatás",en:"discount",hu:"engedmény, árengedmény",ipa:"ˈdɪskaʊnt",ph:"diszkaunt"},
+{t:"Eredménykimutatás",en:"rebate",hu:"visszatérítés",ipa:"ˈriːbeɪt",ph:"ríbejt"},
+{t:"Eredménykimutatás",en:"refund",hu:"visszatérítés",ipa:"ˈriːfʌnd",ph:"rífand"},
+{t:"Eredménykimutatás",en:"earnings per share",hu:"egy részvényre jutó eredmény",ipa:"ˈɜːnɪŋz pə ˈʃeə",ph:"őningz pö seö"},
+{t:"Eredménykimutatás",en:"dividend",hu:"osztalék",ipa:"ˈdɪvɪdend",ph:"dividend"},
+{t:"Eredménykimutatás",en:"retained profit",hu:"mérleg szerinti eredmény",ipa:"rɪˌteɪnd ˈprɒfɪt",ph:"ritejnd profit"},
+{t:"Eredménykimutatás",en:"cash flow statement",hu:"cash flow kimutatás",ipa:"ˈkæʃ fləʊ ˈsteɪtmənt",ph:"kes flou sztejtmönt"},
+{t:"Eredménykimutatás",en:"cash flow",hu:"pénzáramlás",ipa:"ˈkæʃ fləʊ",ph:"kes flou"},
+{t:"Eredménykimutatás",en:"operating cash flow",hu:"működési cash flow",ipa:"ˈɒpəreɪtɪŋ ˈkæʃ fləʊ",ph:"opörejtin kes flou"},
+{t:"Eredménykimutatás",en:"free cash flow",hu:"szabad pénzáram",ipa:"ˌfriː ˈkæʃ fləʊ",ph:"frí kes flou"},
+{t:"Eredménykimutatás",en:"cash inflow",hu:"pénzbeáramlás",ipa:"ˈkæʃ ˌɪnfləʊ",ph:"kes inflou"},
+{t:"Eredménykimutatás",en:"cash outflow",hu:"pénzkiáramlás",ipa:"ˈkæʃ ˌaʊtfləʊ",ph:"kes autflou"},
+{t:"Eredménykimutatás",en:"revenue recognition",hu:"bevétel elszámolása",ipa:"ˈrevənjuː ˌrekəɡˈnɪʃn",ph:"revönjú rekögnisn"},
+{t:"Eredménykimutatás",en:"percentage of completion",hu:"készültségi fok szerinti elszámolás",ipa:"pəˈsentɪdʒ əv kəmˈpliːʃn",ph:"pöszentidzs öv kömplísn"},
+{t:"Eredménykimutatás",en:"write-down",hu:"leértékelés",ipa:"ˈraɪt daʊn",ph:"rájt daun"},
+{t:"Eredménykimutatás",en:"restructuring cost",hu:"átszervezési költség",ipa:"riːˈstrʌktʃərɪŋ kɒst",ph:"rísztrakcsörin koszt"},
+{t:"Eredménykimutatás",en:"one-off item",hu:"egyszeri tétel",ipa:"ˌwʌn ɒf ˈaɪtəm",ph:"van of ájtöm"},
+{t:"Adózás",en:"tax",hu:"adó",ipa:"tæks",ph:"teksz"},
+{t:"Adózás",en:"taxation",hu:"adóztatás",ipa:"tækˈseɪʃn",ph:"tekszejsn"},
+{t:"Adózás",en:"taxpayer",hu:"adózó",ipa:"ˈtækspeɪə",ph:"tekszpejö"},
+{t:"Adózás",en:"tax authority",hu:"adóhatóság",ipa:"ˈtæks ɔːˌθɒrəti",ph:"teksz ószoröti"},
+{t:"Adózás",en:"tax return",hu:"adóbevallás",ipa:"ˈtæks rɪˌtɜːn",ph:"teksz ritőn"},
+{t:"Adózás",en:"tax base",hu:"adóalap",ipa:"ˈtæks beɪs",ph:"teksz bejsz"},
+{t:"Adózás",en:"tax rate",hu:"adókulcs",ipa:"ˈtæks reɪt",ph:"teksz rejt"},
+{t:"Adózás",en:"tax liability",hu:"adófizetési kötelezettség",ipa:"ˈtæks ˌlaɪəˈbɪləti",ph:"teksz lájöbiliti"},
+{t:"Adózás",en:"tax assessment",hu:"adómegállapítás",ipa:"ˈtæks əˌsesmənt",ph:"teksz öszeszmönt"},
+{t:"Adózás",en:"tax audit",hu:"adóellenőrzés",ipa:"ˈtæks ˌɔːdɪt",ph:"teksz ódit"},
+{t:"Adózás",en:"tax inspection",hu:"adóvizsgálat",ipa:"ˈtæks ɪnˌspekʃn",ph:"teksz inszpeksn"},
+{t:"Adózás",en:"tax office",hu:"adóhivatal",ipa:"ˈtæks ˌɒfɪs",ph:"teksz ofisz"},
+{t:"Adózás",en:"tax year",hu:"adóév",ipa:"ˈtæks jɪə",ph:"teksz jiö"},
+{t:"Adózás",en:"tax code",hu:"adószám, adókód",ipa:"ˈtæks kəʊd",ph:"teksz koud"},
+{t:"Adózás",en:"VAT",hu:"áfa",ipa:"ˌviː eɪ ˈtiː",ph:"ví ej tí"},
+{t:"Adózás",en:"value added tax",hu:"általános forgalmi adó",ipa:"ˌvæljuː ˈædɪd tæks",ph:"velyú edid teksz"},
+{t:"Adózás",en:"input VAT",hu:"előzetesen felszámított áfa",ipa:"ˈɪnpʊt ˌviː eɪ ˈtiː",ph:"input ví ej tí"},
+{t:"Adózás",en:"output VAT",hu:"fizetendő áfa",ipa:"ˈaʊtpʊt ˌviː eɪ ˈtiː",ph:"autput ví ej tí"},
+{t:"Adózás",en:"VAT return",hu:"áfabevallás",ipa:"ˌviː eɪ ˈtiː rɪˌtɜːn",ph:"ví ej tí ritőn"},
+{t:"Adózás",en:"VAT registration number",hu:"közösségi adószám",ipa:"ˌviː eɪ ˈtiː ˌredʒɪˈstreɪʃn ˈnʌmbə",ph:"ví ej tí redzsisztrejsn nambö"},
+{t:"Adózás",en:"reverse charge",hu:"fordított adózás",ipa:"rɪˈvɜːs tʃɑːdʒ",ph:"rivősz csádzs"},
+{t:"Adózás",en:"zero-rated",hu:"nulla kulcsos",ipa:"ˈzɪərəʊ ˌreɪtɪd",ph:"ziörou rejtid"},
+{t:"Adózás",en:"exempt",hu:"adómentes",ipa:"ɪɡˈzempt",ph:"igzempt"},
+{t:"Adózás",en:"exemption",hu:"adómentesség",ipa:"ɪɡˈzempʃn",ph:"igzempsn"},
+{t:"Adózás",en:"taxable",hu:"adóköteles",ipa:"ˈtæksəbl",ph:"tekszöbl"},
+{t:"Adózás",en:"taxable income",hu:"adóköteles jövedelem",ipa:"ˈtæksəbl ˈɪnkʌm",ph:"tekszöbl inkam"},
+{t:"Adózás",en:"corporate tax",hu:"társasági adó",ipa:"ˈkɔːpərət tæks",ph:"kópöröt teksz"},
+{t:"Adózás",en:"corporation tax",hu:"társasági adó",ipa:"ˌkɔːpəˈreɪʃn tæks",ph:"kópörejsn teksz"},
+{t:"Adózás",en:"income tax",hu:"személyi jövedelemadó",ipa:"ˈɪnkʌm tæks",ph:"inkam teksz"},
+{t:"Adózás",en:"payroll tax",hu:"bérteher",ipa:"ˈpeɪrəʊl tæks",ph:"pejroul teksz"},
+{t:"Adózás",en:"withholding tax",hu:"forrásadó",ipa:"wɪðˈhəʊldɪŋ tæks",ph:"viszhouldin teksz"},
+{t:"Adózás",en:"capital gains tax",hu:"árfolyamnyereség-adó",ipa:"ˈkæpɪtl ɡeɪnz tæks",ph:"kepitl gejnz teksz"},
+{t:"Adózás",en:"local business tax",hu:"helyi iparűzési adó",ipa:"ˈləʊkl ˈbɪznəs tæks",ph:"loukl biznösz teksz"},
+{t:"Adózás",en:"property tax",hu:"építményadó, vagyonadó",ipa:"ˈprɒpəti tæks",ph:"propöti teksz"},
+{t:"Adózás",en:"excise duty",hu:"jövedéki adó",ipa:"ˈeksaɪz ˌdjuːti",ph:"ekszájz djúti"},
+{t:"Adózás",en:"customs duty",hu:"vám",ipa:"ˈkʌstəmz ˌdjuːti",ph:"kasztömz djúti"},
+{t:"Adózás",en:"stamp duty",hu:"illeték",ipa:"ˈstæmp ˌdjuːti",ph:"sztemp djúti"},
+{t:"Adózás",en:"levy",hu:"közteher, illeték",ipa:"ˈlevi",ph:"levi"},
+{t:"Adózás",en:"surcharge",hu:"pótdíj, pótadó",ipa:"ˈsɜːtʃɑːdʒ",ph:"szőcsádzs"},
+{t:"Adózás",en:"tax allowance",hu:"adókedvezmény",ipa:"ˈtæks əˌlaʊəns",ph:"teksz ölauönsz"},
+{t:"Adózás",en:"tax relief",hu:"adókönnyítés",ipa:"ˈtæks rɪˌliːf",ph:"teksz rilíf"},
+{t:"Adózás",en:"tax credit",hu:"adójóváírás",ipa:"ˈtæks ˌkredɪt",ph:"teksz kredit"},
+{t:"Adózás",en:"tax deduction",hu:"adólevonás",ipa:"ˈtæks dɪˌdʌkʃn",ph:"teksz didaksn"},
+{t:"Adózás",en:"deductible",hu:"levonható",ipa:"dɪˈdʌktəbl",ph:"didaktöbl"},
+{t:"Adózás",en:"non-deductible",hu:"nem levonható",ipa:"ˌnɒn dɪˈdʌktəbl",ph:"non didaktöbl"},
+{t:"Adózás",en:"tax loss carryforward",hu:"elhatárolt veszteség",ipa:"ˈtæks lɒs ˈkærifɔːwəd",ph:"teksz losz kerifóvöd"},
+{t:"Adózás",en:"advance tax",hu:"adóelőleg",ipa:"ədˈvɑːns tæks",ph:"ödvánsz teksz"},
+{t:"Adózás",en:"tax arrears",hu:"adóhátralék",ipa:"ˈtæks əˌrɪəz",ph:"teksz öriöz"},
+{t:"Adózás",en:"penalty",hu:"bírság",ipa:"ˈpenəlti",ph:"penölti"},
+{t:"Adózás",en:"late payment interest",hu:"késedelmi pótlék",ipa:"ˌleɪt ˈpeɪmənt ˈɪntrəst",ph:"lejt pejmönt intröszt"},
+{t:"Adózás",en:"fine",hu:"pénzbírság",ipa:"faɪn",ph:"fájn"},
+{t:"Adózás",en:"tax evasion",hu:"adócsalás",ipa:"ˈtæks ɪˌveɪʒn",ph:"teksz ivejzsn"},
+{t:"Adózás",en:"tax avoidance",hu:"adóelkerülés",ipa:"ˈtæks əˌvɔɪdəns",ph:"teksz övojdönsz"},
+{t:"Adózás",en:"tax haven",hu:"adóparadicsom",ipa:"ˈtæks ˌheɪvn",ph:"teksz hejvn"},
+{t:"Adózás",en:"double taxation treaty",hu:"kettős adóztatás elkerüléséről szóló egyezmény",ipa:"ˌdʌbl tækˈseɪʃn ˈtriːti",ph:"dabl tekszejsn tríti"},
+{t:"Adózás",en:"transfer pricing",hu:"transzferár-képzés",ipa:"ˈtrænsfɜː ˌpraɪsɪŋ",ph:"trenszfő prájszin"},
+{t:"Adózás",en:"arm's length principle",hu:"szokásos piaci ár elve",ipa:"ˌɑːmz ˈleŋθ ˈprɪnsəpl",ph:"ámz lengsz prinszöpl"},
+{t:"Adózás",en:"related party",hu:"kapcsolt vállalkozás",ipa:"rɪˈleɪtɪd ˈpɑːti",ph:"rilejtid páti"},
+{t:"Adózás",en:"permanent establishment",hu:"telephely",ipa:"ˈpɜːmənənt ɪˈstæblɪʃmənt",ph:"pőmönönt isztéblismönt"},
+{t:"Adózás",en:"flat tax",hu:"egykulcsos adó",ipa:"ˌflæt ˈtæks",ph:"flet teksz"},
+{t:"Adózás",en:"progressive tax",hu:"progresszív adó",ipa:"prəˈɡresɪv tæks",ph:"prögresziv teksz"},
+{t:"Adózás",en:"simplified tax scheme",hu:"egyszerűsített adózás",ipa:"ˈsɪmplɪfaɪd tæks skiːm",ph:"szimplifájd teksz szkím"},
+{t:"Adózás",en:"self-employed",hu:"egyéni vállalkozó",ipa:"ˌself ɪmˈplɔɪd",ph:"szelf implojd"},
+{t:"Adózás",en:"sole trader",hu:"egyéni vállalkozó",ipa:"ˌsəʊl ˈtreɪdə",ph:"szoul trejdö"},
+{t:"Adózás",en:"declaration",hu:"bevallás, nyilatkozat",ipa:"ˌdekləˈreɪʃn",ph:"deklörejsn"},
+{t:"Adózás",en:"filing deadline",hu:"bevallási határidő",ipa:"ˈfaɪlɪŋ ˈdedlaɪn",ph:"fájlin dedlájn"},
+{t:"Adózás",en:"to file a return",hu:"bevallást benyújtani",ipa:"ˈfaɪl ə rɪˈtɜːn",ph:"fájl ö ritőn"},
+{t:"Adózás",en:"to levy a tax",hu:"adót kivetni",ipa:"ˈlevi ə ˈtæks",ph:"levi ö teksz"},
+{t:"Adózás",en:"to be liable for tax",hu:"adófizetésre kötelezett",ipa:"ˈlaɪəbl fə ˈtæks",ph:"lájöbl fö teksz"},
+{t:"Adózás",en:"refundable",hu:"visszaigényelhető",ipa:"rɪˈfʌndəbl",ph:"rifandöbl"},
+{t:"Adózás",en:"tax refund",hu:"adó-visszatérítés",ipa:"ˈtæks ˌriːfʌnd",ph:"teksz rífand"},
+{t:"Adózás",en:"net of tax",hu:"adózás után",ipa:"ˌnet əv ˈtæks",ph:"net öv teksz"},
+{t:"Adózás",en:"gross of tax",hu:"adózás előtt",ipa:"ˌɡrəʊs əv ˈtæks",ph:"grousz öv teksz"},
+{t:"Adózás",en:"effective tax rate",hu:"tényleges adókulcs",ipa:"ɪˌfektɪv ˈtæks reɪt",ph:"ifektiv teksz rejt"},
+{t:"Bér és járulékok",en:"payroll",hu:"bérszámfejtés",ipa:"ˈpeɪrəʊl",ph:"pejroul"},
+{t:"Bér és járulékok",en:"payslip",hu:"bérjegyzék",ipa:"ˈpeɪslɪp",ph:"pejszlip"},
+{t:"Bér és járulékok",en:"gross salary",hu:"bruttó bér",ipa:"ˌɡrəʊs ˈsæləri",ph:"grousz szelöri"},
+{t:"Bér és járulékok",en:"net salary",hu:"nettó bér",ipa:"ˌnet ˈsæləri",ph:"net szelöri"},
+{t:"Bér és járulékok",en:"take-home pay",hu:"kézhez kapott bér",ipa:"ˈteɪk həʊm peɪ",ph:"tejk houm pej"},
+{t:"Bér és járulékok",en:"basic salary",hu:"alapbér",ipa:"ˈbeɪsɪk ˈsæləri",ph:"bejszik szelöri"},
+{t:"Bér és járulékok",en:"hourly rate",hu:"órabér",ipa:"ˈaʊəli reɪt",ph:"auöli rejt"},
+{t:"Bér és járulékok",en:"minimum wage",hu:"minimálbér",ipa:"ˈmɪnɪməm weɪdʒ",ph:"minimöm vejdzs"},
+{t:"Bér és járulékok",en:"overtime",hu:"túlóra",ipa:"ˈəʊvətaɪm",ph:"ouvötájm"},
+{t:"Bér és járulékok",en:"bonus",hu:"bónusz, prémium",ipa:"ˈbəʊnəs",ph:"bounösz"},
+{t:"Bér és járulékok",en:"allowance",hu:"juttatás, pótlék",ipa:"əˈlaʊəns",ph:"ölauönsz"},
+{t:"Bér és járulékok",en:"fringe benefit",hu:"béren kívüli juttatás",ipa:"ˌfrɪndʒ ˈbenɪfɪt",ph:"frindzs benifit"},
+{t:"Bér és járulékok",en:"benefit in kind",hu:"természetbeni juttatás",ipa:"ˌbenɪfɪt ɪn ˈkaɪnd",ph:"benifit in kájnd"},
+{t:"Bér és járulékok",en:"deduction",hu:"levonás",ipa:"dɪˈdʌkʃn",ph:"didaksn"},
+{t:"Bér és járulékok",en:"social security contribution",hu:"társadalombiztosítási járulék",ipa:"ˌsəʊʃl sɪˈkjʊərəti ˌkɒntrɪˈbjuːʃn",ph:"sousl szikjuöriti kontribjúsn"},
+{t:"Bér és járulékok",en:"employee contribution",hu:"munkavállalói járulék",ipa:"ɪmˌplɔɪiː ˌkɒntrɪˈbjuːʃn",ph:"implojí kontribjúsn"},
+{t:"Bér és járulékok",en:"employer contribution",hu:"munkáltatói járulék",ipa:"ɪmˌplɔɪə ˌkɒntrɪˈbjuːʃn",ph:"implojö kontribjúsn"},
+{t:"Bér és járulékok",en:"pension contribution",hu:"nyugdíjjárulék",ipa:"ˈpenʃn ˌkɒntrɪˈbjuːʃn",ph:"pensn kontribjúsn"},
+{t:"Bér és járulékok",en:"health insurance",hu:"egészségbiztosítás",ipa:"ˈhelθ ɪnˌʃʊərəns",ph:"helsz insuörönsz"},
+{t:"Bér és járulékok",en:"pension",hu:"nyugdíj",ipa:"ˈpenʃn",ph:"pensn"},
+{t:"Bér és járulékok",en:"pension fund",hu:"nyugdíjpénztár",ipa:"ˈpenʃn fʌnd",ph:"pensn fand"},
+{t:"Bér és járulékok",en:"retirement",hu:"nyugdíjba vonulás",ipa:"rɪˈtaɪəmənt",ph:"ritájömönt"},
+{t:"Bér és járulékok",en:"severance pay",hu:"végkielégítés",ipa:"ˈsevərəns peɪ",ph:"szevörönsz pej"},
+{t:"Bér és járulékok",en:"notice period",hu:"felmondási idő",ipa:"ˈnəʊtɪs ˌpɪəriəd",ph:"noutisz piöriöd"},
+{t:"Bér és járulékok",en:"employment contract",hu:"munkaszerződés",ipa:"ɪmˈplɔɪmənt ˈkɒntrækt",ph:"implojmönt kontrekt"},
+{t:"Bér és járulékok",en:"employee",hu:"munkavállaló",ipa:"ˌɪmplɔɪˈiː",ph:"implojí"},
+{t:"Bér és járulékok",en:"employer",hu:"munkáltató",ipa:"ɪmˈplɔɪə",ph:"implojö"},
+{t:"Bér és járulékok",en:"headcount",hu:"létszám",ipa:"ˈhedkaʊnt",ph:"hedkaunt"},
+{t:"Bér és járulékok",en:"full-time",hu:"teljes munkaidős",ipa:"ˌfʊl ˈtaɪm",ph:"ful tájm"},
+{t:"Bér és járulékok",en:"part-time",hu:"részmunkaidős",ipa:"ˌpɑːt ˈtaɪm",ph:"pát tájm"},
+{t:"Bér és járulékok",en:"timesheet",hu:"jelenléti ív",ipa:"ˈtaɪmʃiːt",ph:"tájmsít"},
+{t:"Bér és járulékok",en:"attendance",hu:"jelenlét",ipa:"əˈtendəns",ph:"ötendönsz"},
+{t:"Bér és járulékok",en:"absence",hu:"távollét",ipa:"ˈæbsəns",ph:"ebszönsz"},
+{t:"Bér és járulékok",en:"sick leave",hu:"betegszabadság",ipa:"ˈsɪk liːv",ph:"szik lív"},
+{t:"Bér és járulékok",en:"sick pay",hu:"táppénz",ipa:"ˈsɪk peɪ",ph:"szik pej"},
+{t:"Bér és járulékok",en:"annual leave",hu:"éves szabadság",ipa:"ˈænjuəl liːv",ph:"enyuöl lív"},
+{t:"Bér és járulékok",en:"paid leave",hu:"fizetett szabadság",ipa:"ˌpeɪd ˈliːv",ph:"pejd lív"},
+{t:"Bér és járulékok",en:"unpaid leave",hu:"fizetés nélküli szabadság",ipa:"ˌʌnpeɪd ˈliːv",ph:"anpejd lív"},
+{t:"Bér és járulékok",en:"maternity leave",hu:"szülési szabadság",ipa:"məˈtɜːnəti liːv",ph:"mötőnöti lív"},
+{t:"Bér és járulékok",en:"parental leave",hu:"szülői szabadság",ipa:"pəˈrentl liːv",ph:"pöröntl lív"},
+{t:"Bér és járulékok",en:"payroll register",hu:"bérfeladás",ipa:"ˈpeɪrəʊl ˈredʒɪstə",ph:"pejroul redzsisztö"},
+{t:"Bér és járulékok",en:"salary advance",hu:"bérelőleg",ipa:"ˈsæləri ədˌvɑːns",ph:"szelöri ödvánsz"},
+{t:"Bér és járulékok",en:"garnishment",hu:"letiltás a bérből",ipa:"ˈɡɑːnɪʃmənt",ph:"gánismönt"},
+{t:"Bér és járulékok",en:"net pay",hu:"nettó kifizetés",ipa:"ˌnet ˈpeɪ",ph:"net pej"},
+{t:"Bér és járulékok",en:"pay period",hu:"bérfizetési időszak",ipa:"ˈpeɪ ˌpɪəriəd",ph:"pej piöriöd"},
+{t:"Bér és járulékok",en:"payday",hu:"fizetésnap",ipa:"ˈpeɪdeɪ",ph:"pejdej"},
+{t:"Bér és járulékok",en:"labour law",hu:"munkajog",ipa:"ˈleɪbə lɔː",ph:"lejbö ló"},
+{t:"Bér és járulékok",en:"collective agreement",hu:"kollektív szerződés",ipa:"kəˌlektɪv əˈɡriːmənt",ph:"kölektiv ögrímönt"},
+{t:"Bér és járulékok",en:"trade union",hu:"szakszervezet",ipa:"ˌtreɪd ˈjuːniən",ph:"trejd júniön"},
+{t:"Bér és járulékok",en:"redundancy",hu:"létszámleépítés",ipa:"rɪˈdʌndənsi",ph:"ridandönszi"},
+{t:"Bér és járulékok",en:"dismissal",hu:"felmondás, elbocsátás",ipa:"dɪsˈmɪsl",ph:"diszmiszl"},
+{t:"Bér és járulékok",en:"resignation",hu:"felmondás (munkavállalói)",ipa:"ˌrezɪɡˈneɪʃn",ph:"rezignejsn"},
+{t:"Bér és járulékok",en:"probation period",hu:"próbaidő",ipa:"prəˈbeɪʃn ˌpɪəriəd",ph:"pröbejsn piöriöd"},
+{t:"Bér és járulékok",en:"job title",hu:"munkakör",ipa:"ˈdʒɒb taɪtl",ph:"dzsob tájtl"},
+{t:"Bér és járulékok",en:"to hire",hu:"felvenni, alkalmazni",ipa:"ˈhaɪə",ph:"hájö"},
+{t:"Bér és járulékok",en:"to dismiss",hu:"elbocsátani",ipa:"dɪsˈmɪs",ph:"diszmisz"},
+{t:"Bér és járulékok",en:"to resign",hu:"felmondani",ipa:"rɪˈzaɪn",ph:"rizájn"},
+{t:"Bank és pénzforgalom",en:"bank",hu:"bank",ipa:"bæŋk",ph:"benk"},
+{t:"Bank és pénzforgalom",en:"bank account",hu:"bankszámla",ipa:"ˈbæŋk əˌkaʊnt",ph:"benk ökaunt"},
+{t:"Bank és pénzforgalom",en:"current account",hu:"folyószámla",ipa:"ˈkʌrənt əˌkaʊnt",ph:"karönt ökaunt"},
+{t:"Bank és pénzforgalom",en:"savings account",hu:"megtakarítási számla",ipa:"ˈseɪvɪŋz əˌkaʊnt",ph:"szejvingz ökaunt"},
+{t:"Bank és pénzforgalom",en:"bank statement",hu:"bankkivonat",ipa:"ˈbæŋk ˌsteɪtmənt",ph:"benk sztejtmönt"},
+{t:"Bank és pénzforgalom",en:"account holder",hu:"számlatulajdonos",ipa:"əˈkaʊnt ˌhəʊldə",ph:"ökaunt houldö"},
+{t:"Bank és pénzforgalom",en:"sort code",hu:"bankazonosító kód",ipa:"ˈsɔːt kəʊd",ph:"szót koud"},
+{t:"Bank és pénzforgalom",en:"IBAN",hu:"nemzetközi bankszámlaszám",ipa:"ˈiːbæn",ph:"íben"},
+{t:"Bank és pénzforgalom",en:"transfer",hu:"átutalás",ipa:"ˈtrænsfɜː",ph:"trenszfő"},
+{t:"Bank és pénzforgalom",en:"direct debit",hu:"csoportos beszedés",ipa:"dəˌrekt ˈdebɪt",ph:"direkt debit"},
+{t:"Bank és pénzforgalom",en:"standing order",hu:"állandó átutalási megbízás",ipa:"ˌstændɪŋ ˈɔːdə",ph:"sztendin ódö"},
+{t:"Bank és pénzforgalom",en:"payment",hu:"fizetés",ipa:"ˈpeɪmənt",ph:"pejmönt"},
+{t:"Bank és pénzforgalom",en:"payment order",hu:"fizetési megbízás",ipa:"ˈpeɪmənt ˌɔːdə",ph:"pejmönt ódö"},
+{t:"Bank és pénzforgalom",en:"payment terms",hu:"fizetési feltételek",ipa:"ˈpeɪmənt tɜːmz",ph:"pejmönt tőmz"},
+{t:"Bank és pénzforgalom",en:"due date",hu:"esedékesség napja",ipa:"ˈdjuː deɪt",ph:"djú dejt"},
+{t:"Bank és pénzforgalom",en:"deadline",hu:"határidő",ipa:"ˈdedlaɪn",ph:"dedlájn"},
+{t:"Bank és pénzforgalom",en:"cash",hu:"készpénz",ipa:"kæʃ",ph:"kes"},
+{t:"Bank és pénzforgalom",en:"withdrawal",hu:"készpénzfelvétel",ipa:"wɪðˈdrɔːəl",ph:"viszdróöl"},
+{t:"Bank és pénzforgalom",en:"balance enquiry",hu:"egyenleglekérdezés",ipa:"ˈbæləns ɪnˌkwaɪəri",ph:"belönsz inkvájöri"},
+{t:"Bank és pénzforgalom",en:"overdraft",hu:"folyószámlahitel",ipa:"ˈəʊvədrɑːft",ph:"ouvödráft"},
+{t:"Bank és pénzforgalom",en:"credit limit",hu:"hitelkeret",ipa:"ˈkredɪt ˌlɪmɪt",ph:"kredit limit"},
+{t:"Bank és pénzforgalom",en:"loan",hu:"kölcsön, hitel",ipa:"ləʊn",ph:"loun"},
+{t:"Bank és pénzforgalom",en:"borrower",hu:"hitelfelvevő",ipa:"ˈbɒrəʊə",ph:"borouö"},
+{t:"Bank és pénzforgalom",en:"lender",hu:"hitelező",ipa:"ˈlendə",ph:"lendö"},
+{t:"Bank és pénzforgalom",en:"interest",hu:"kamat",ipa:"ˈɪntrəst",ph:"intröszt"},
+{t:"Bank és pénzforgalom",en:"interest rate",hu:"kamatláb",ipa:"ˈɪntrəst reɪt",ph:"intröszt rejt"},
+{t:"Bank és pénzforgalom",en:"fixed rate",hu:"fix kamat",ipa:"ˌfɪkst ˈreɪt",ph:"fikszt rejt"},
+{t:"Bank és pénzforgalom",en:"variable rate",hu:"változó kamat",ipa:"ˌveəriəbl ˈreɪt",ph:"veöriöbl rejt"},
+{t:"Bank és pénzforgalom",en:"compound interest",hu:"kamatos kamat",ipa:"ˌkɒmpaʊnd ˈɪntrəst",ph:"kompaund intröszt"},
+{t:"Bank és pénzforgalom",en:"annual percentage rate",hu:"teljes hiteldíj mutató",ipa:"ˌænjuəl pəˈsentɪdʒ reɪt",ph:"enyuöl pöszentidzs rejt"},
+{t:"Bank és pénzforgalom",en:"instalment",hu:"törlesztőrészlet",ipa:"ɪnˈstɔːlmənt",ph:"insztólmönt"},
+{t:"Bank és pénzforgalom",en:"repayment",hu:"törlesztés",ipa:"rɪˈpeɪmənt",ph:"ripejmönt"},
+{t:"Bank és pénzforgalom",en:"principal",hu:"tőkerész",ipa:"ˈprɪnsəpl",ph:"prinszöpl"},
+{t:"Bank és pénzforgalom",en:"maturity",hu:"lejárat",ipa:"məˈtʃʊərəti",ph:"möcsuöröti"},
+{t:"Bank és pénzforgalom",en:"credit rating",hu:"hitelminősítés",ipa:"ˈkredɪt ˌreɪtɪŋ",ph:"kredit rejtin"},
+{t:"Bank és pénzforgalom",en:"creditworthiness",hu:"hitelképesség",ipa:"ˈkredɪtˌwɜːðinəs",ph:"kreditvődinösz"},
+{t:"Bank és pénzforgalom",en:"default",hu:"nemteljesítés",ipa:"dɪˈfɔːlt",ph:"difólt"},
+{t:"Bank és pénzforgalom",en:"arrears",hu:"hátralék",ipa:"əˈrɪəz",ph:"öriöz"},
+{t:"Bank és pénzforgalom",en:"debt",hu:"adósság",ipa:"det",ph:"det"},
+{t:"Bank és pénzforgalom",en:"debtor",hu:"adós",ipa:"ˈdetə",ph:"detö"},
+{t:"Bank és pénzforgalom",en:"creditor",hu:"hitelező",ipa:"ˈkredɪtə",ph:"kreditö"},
+{t:"Bank és pénzforgalom",en:"debt collection",hu:"követeléskezelés",ipa:"ˈdet kəˌlekʃn",ph:"det köleksn"},
+{t:"Bank és pénzforgalom",en:"bank charge",hu:"bankköltség",ipa:"ˈbæŋk tʃɑːdʒ",ph:"benk csádzs"},
+{t:"Bank és pénzforgalom",en:"transaction fee",hu:"tranzakciós díj",ipa:"trænˈzækʃn fiː",ph:"trenzeksn fí"},
+{t:"Bank és pénzforgalom",en:"exchange rate",hu:"árfolyam",ipa:"ɪksˈtʃeɪndʒ reɪt",ph:"ikszcsejndzs rejt"},
+{t:"Bank és pénzforgalom",en:"foreign currency",hu:"deviza",ipa:"ˌfɒrən ˈkʌrənsi",ph:"forön karönszi"},
+{t:"Bank és pénzforgalom",en:"currency",hu:"pénznem, valuta",ipa:"ˈkʌrənsi",ph:"karönszi"},
+{t:"Bank és pénzforgalom",en:"exchange gain",hu:"árfolyamnyereség",ipa:"ɪksˈtʃeɪndʒ ɡeɪn",ph:"ikszcsejndzs gejn"},
+{t:"Bank és pénzforgalom",en:"exchange loss",hu:"árfolyamveszteség",ipa:"ɪksˈtʃeɪndʒ lɒs",ph:"ikszcsejndzs losz"},
+{t:"Bank és pénzforgalom",en:"cheque",hu:"csekk",ipa:"tʃek",ph:"csek"},
+{t:"Bank és pénzforgalom",en:"card payment",hu:"kártyás fizetés",ipa:"ˈkɑːd ˌpeɪmənt",ph:"kád pejmönt"},
+{t:"Bank és pénzforgalom",en:"debit card",hu:"betéti kártya",ipa:"ˈdebɪt kɑːd",ph:"debit kád"},
+{t:"Bank és pénzforgalom",en:"credit card",hu:"hitelkártya",ipa:"ˈkredɪt kɑːd",ph:"kredit kád"},
+{t:"Bank és pénzforgalom",en:"cash register",hu:"pénztárgép",ipa:"ˈkæʃ ˌredʒɪstə",ph:"kes redzsisztö"},
+{t:"Bank és pénzforgalom",en:"till",hu:"pénztár",ipa:"tɪl",ph:"til"},
+{t:"Bank és pénzforgalom",en:"cashier",hu:"pénztáros",ipa:"kæˈʃɪə",ph:"kesiö"},
+{t:"Bank és pénzforgalom",en:"receipt",hu:"nyugta, elismervény",ipa:"rɪˈsiːt",ph:"riszít"},
+{t:"Bank és pénzforgalom",en:"clearing",hu:"elszámolás",ipa:"ˈklɪərɪŋ",ph:"kliörin"},
+{t:"Bank és pénzforgalom",en:"settlement",hu:"kiegyenlítés, elszámolás",ipa:"ˈsetlmənt",ph:"szetlmönt"},
+{t:"Bank és pénzforgalom",en:"liquidity ratio",hu:"likviditási mutató",ipa:"lɪˈkwɪdəti ˈreɪʃiəʊ",ph:"likviditi rejsiou"},
+{t:"Bank és pénzforgalom",en:"letter of credit",hu:"akkreditív",ipa:"ˌletər əv ˈkredɪt",ph:"letör öv kredit"},
+{t:"Bank és pénzforgalom",en:"bank guarantee",hu:"bankgarancia",ipa:"ˌbæŋk ɡærənˈtiː",ph:"benk gerönti"},
+{t:"Bank és pénzforgalom",en:"factoring",hu:"faktoring",ipa:"ˈfæktərɪŋ",ph:"faktörin"},
+{t:"Bank és pénzforgalom",en:"leasing",hu:"lízing",ipa:"ˈliːsɪŋ",ph:"líszin"},
+{t:"Bank és pénzforgalom",en:"to transfer",hu:"átutalni",ipa:"trænsˈfɜː",ph:"trenszfő"},
+{t:"Bank és pénzforgalom",en:"to withdraw",hu:"felvenni (pénzt)",ipa:"wɪðˈdrɔː",ph:"viszdró"},
+{t:"Bank és pénzforgalom",en:"to deposit",hu:"befizetni",ipa:"dɪˈpɒzɪt",ph:"dipozit"},
+{t:"Bank és pénzforgalom",en:"to borrow",hu:"kölcsönkérni",ipa:"ˈbɒrəʊ",ph:"borou"},
+{t:"Bank és pénzforgalom",en:"to lend",hu:"kölcsönadni",ipa:"lend",ph:"lend"},
+{t:"Bank és pénzforgalom",en:"to repay",hu:"visszafizetni",ipa:"rɪˈpeɪ",ph:"ripej"},
+{t:"Számlázás, vevők, szállítók",en:"invoice",hu:"számla",ipa:"ˈɪnvɔɪs",ph:"invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"sales invoice",hu:"kimenő számla",ipa:"ˈseɪlz ˌɪnvɔɪs",ph:"szejlz invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"purchase invoice",hu:"bejövő számla",ipa:"ˈpɜːtʃəs ˌɪnvɔɪs",ph:"pőcsösz invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"invoice number",hu:"számlaszám",ipa:"ˈɪnvɔɪs ˌnʌmbə",ph:"invojsz nambö"},
+{t:"Számlázás, vevők, szállítók",en:"invoice date",hu:"számla kelte",ipa:"ˈɪnvɔɪs deɪt",ph:"invojsz dejt"},
+{t:"Számlázás, vevők, szállítók",en:"issue date",hu:"kiállítás dátuma",ipa:"ˈɪʃuː deɪt",ph:"isú dejt"},
+{t:"Számlázás, vevők, szállítók",en:"delivery date",hu:"teljesítés dátuma",ipa:"dɪˈlɪvəri deɪt",ph:"dilivöri dejt"},
+{t:"Számlázás, vevők, szállítók",en:"credit note",hu:"jóváíró számla",ipa:"ˈkredɪt nəʊt",ph:"kredit nout"},
+{t:"Számlázás, vevők, szállítók",en:"debit note",hu:"terhelési értesítő",ipa:"ˈdebɪt nəʊt",ph:"debit nout"},
+{t:"Számlázás, vevők, szállítók",en:"proforma invoice",hu:"díjbekérő",ipa:"prəʊˈfɔːmə ˌɪnvɔɪs",ph:"proufómö invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"quotation",hu:"árajánlat",ipa:"kwəʊˈteɪʃn",ph:"kvoutejsn"},
+{t:"Számlázás, vevők, szállítók",en:"quote",hu:"árajánlat",ipa:"kwəʊt",ph:"kvout"},
+{t:"Számlázás, vevők, szállítók",en:"purchase order",hu:"megrendelés",ipa:"ˈpɜːtʃəs ˌɔːdə",ph:"pőcsösz ódö"},
+{t:"Számlázás, vevők, szállítók",en:"order confirmation",hu:"rendelés-visszaigazolás",ipa:"ˈɔːdə ˌkɒnfəˈmeɪʃn",ph:"ódö konfömejsn"},
+{t:"Számlázás, vevők, szállítók",en:"delivery note",hu:"szállítólevél",ipa:"dɪˈlɪvəri nəʊt",ph:"dilivöri nout"},
+{t:"Számlázás, vevők, szállítók",en:"packing list",hu:"csomagjegyzék",ipa:"ˈpækɪŋ lɪst",ph:"pekin liszt"},
+{t:"Számlázás, vevők, szállítók",en:"consignment",hu:"szállítmány",ipa:"kənˈsaɪnmənt",ph:"könszájnmönt"},
+{t:"Számlázás, vevők, szállítók",en:"supplier",hu:"szállító, beszállító",ipa:"səˈplaɪə",ph:"szöplájö"},
+{t:"Számlázás, vevők, szállítók",en:"vendor",hu:"eladó, szállító",ipa:"ˈvendə",ph:"vendö"},
+{t:"Számlázás, vevők, szállítók",en:"customer",hu:"vevő, ügyfél",ipa:"ˈkʌstəmə",ph:"kasztömö"},
+{t:"Számlázás, vevők, szállítók",en:"client",hu:"ügyfél",ipa:"ˈklaɪənt",ph:"klájönt"},
+{t:"Számlázás, vevők, szállítók",en:"buyer",hu:"vásárló",ipa:"ˈbaɪə",ph:"bájö"},
+{t:"Számlázás, vevők, szállítók",en:"seller",hu:"eladó",ipa:"ˈselə",ph:"szelö"},
+{t:"Számlázás, vevők, szállítók",en:"net amount",hu:"nettó összeg",ipa:"ˌnet əˈmaʊnt",ph:"net ömaunt"},
+{t:"Számlázás, vevők, szállítók",en:"gross amount",hu:"bruttó összeg",ipa:"ˌɡrəʊs əˈmaʊnt",ph:"grousz ömaunt"},
+{t:"Számlázás, vevők, szállítók",en:"total",hu:"összesen",ipa:"ˈtəʊtl",ph:"toutl"},
+{t:"Számlázás, vevők, szállítók",en:"subtotal",hu:"részösszeg",ipa:"ˈsʌbtəʊtl",ph:"szabtoutl"},
+{t:"Számlázás, vevők, szállítók",en:"unit price",hu:"egységár",ipa:"ˈjuːnɪt praɪs",ph:"júnit prájsz"},
+{t:"Számlázás, vevők, szállítók",en:"quantity",hu:"mennyiség",ipa:"ˈkwɒntəti",ph:"kvontöti"},
+{t:"Számlázás, vevők, szállítók",en:"item",hu:"tétel",ipa:"ˈaɪtəm",ph:"ájtöm"},
+{t:"Számlázás, vevők, szállítók",en:"line item",hu:"számlasor",ipa:"ˈlaɪn ˌaɪtəm",ph:"lájn ájtöm"},
+{t:"Számlázás, vevők, szállítók",en:"description",hu:"megnevezés",ipa:"dɪˈskrɪpʃn",ph:"diszkripsn"},
+{t:"Számlázás, vevők, szállítók",en:"payment deadline",hu:"fizetési határidő",ipa:"ˈpeɪmənt ˌdedlaɪn",ph:"pejmönt dedlájn"},
+{t:"Számlázás, vevők, szállítók",en:"payment method",hu:"fizetési mód",ipa:"ˈpeɪmənt ˌmeθəd",ph:"pejmönt meszöd"},
+{t:"Számlázás, vevők, szállítók",en:"terms of payment",hu:"fizetési feltételek",ipa:"ˌtɜːmz əv ˈpeɪmənt",ph:"tőmz öv pejmönt"},
+{t:"Számlázás, vevők, szállítók",en:"cash on delivery",hu:"utánvét",ipa:"ˌkæʃ ɒn dɪˈlɪvəri",ph:"kes on dilivöri"},
+{t:"Számlázás, vevők, szállítók",en:"payment in advance",hu:"előre fizetés",ipa:"ˈpeɪmənt ɪn ədˈvɑːns",ph:"pejmönt in ödvánsz"},
+{t:"Számlázás, vevők, szállítók",en:"early payment discount",hu:"skontó",ipa:"ˈɜːli ˈpeɪmənt ˌdɪskaʊnt",ph:"őli pejmönt diszkaunt"},
+{t:"Számlázás, vevők, szállítók",en:"aged debtors report",hu:"korosított vevőkimutatás",ipa:"ˌeɪdʒd ˈdetəz rɪˌpɔːt",ph:"ejdzsd detöz ripót"},
+{t:"Számlázás, vevők, szállítók",en:"ageing report",hu:"korosítás",ipa:"ˈeɪdʒɪŋ rɪˌpɔːt",ph:"ejdzsin ripót"},
+{t:"Számlázás, vevők, szállítók",en:"reminder",hu:"fizetési felszólítás",ipa:"rɪˈmaɪndə",ph:"rimájndö"},
+{t:"Számlázás, vevők, szállítók",en:"dunning letter",hu:"fizetési felszólító levél",ipa:"ˈdʌnɪŋ ˌletə",ph:"danin letö"},
+{t:"Számlázás, vevők, szállítók",en:"statement of account",hu:"folyószámla-kivonat",ipa:"ˈsteɪtmənt əv əˈkaʊnt",ph:"sztejtmönt öv ökaunt"},
+{t:"Számlázás, vevők, szállítók",en:"open item",hu:"nyitott tétel",ipa:"ˌəʊpən ˈaɪtəm",ph:"oupön ájtöm"},
+{t:"Számlázás, vevők, szállítók",en:"partial payment",hu:"részteljesítés",ipa:"ˈpɑːʃl ˈpeɪmənt",ph:"pásl pejmönt"},
+{t:"Számlázás, vevők, szállítók",en:"prepayment",hu:"előleg",ipa:"ˌpriːˈpeɪmənt",ph:"prípejmönt"},
+{t:"Számlázás, vevők, szállítók",en:"advance invoice",hu:"előlegszámla",ipa:"ədˈvɑːns ˌɪnvɔɪs",ph:"ödvánsz invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"final invoice",hu:"végszámla",ipa:"ˈfaɪnl ˌɪnvɔɪs",ph:"fájnl invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"recurring invoice",hu:"ismétlődő számla",ipa:"rɪˈkʌrɪŋ ˌɪnvɔɪs",ph:"rikarin invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"e-invoice",hu:"elektronikus számla",ipa:"ˈiː ˌɪnvɔɪs",ph:"í invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"invoicing software",hu:"számlázó program",ipa:"ˈɪnvɔɪsɪŋ ˈsɒftweə",ph:"invojszin szoftveö"},
+{t:"Számlázás, vevők, szállítók",en:"procurement",hu:"beszerzés",ipa:"prəˈkjʊəmənt",ph:"prökjuömönt"},
+{t:"Számlázás, vevők, szállítók",en:"purchasing",hu:"beszerzés",ipa:"ˈpɜːtʃəsɪŋ",ph:"pőcsöszin"},
+{t:"Számlázás, vevők, szállítók",en:"supply chain",hu:"ellátási lánc",ipa:"səˈplaɪ tʃeɪn",ph:"szöpláj csejn"},
+{t:"Számlázás, vevők, szállítók",en:"warehouse",hu:"raktár",ipa:"ˈweəhaʊs",ph:"veöhausz"},
+{t:"Számlázás, vevők, szállítók",en:"goods received note",hu:"bevételezési bizonylat",ipa:"ˌɡʊdz rɪˈsiːvd nəʊt",ph:"gudz riszívd nout"},
+{t:"Számlázás, vevők, szállítók",en:"return",hu:"visszáru",ipa:"rɪˈtɜːn",ph:"ritőn"},
+{t:"Számlázás, vevők, szállítók",en:"complaint",hu:"reklamáció, panasz",ipa:"kəmˈpleɪnt",ph:"kömplejnt"},
+{t:"Számlázás, vevők, szállítók",en:"warranty",hu:"jótállás, garancia",ipa:"ˈwɒrənti",ph:"voröncsi"},
+{t:"Számlázás, vevők, szállítók",en:"contract",hu:"szerződés",ipa:"ˈkɒntrækt",ph:"kontrekt"},
+{t:"Számlázás, vevők, szállítók",en:"agreement",hu:"megállapodás",ipa:"əˈɡriːmənt",ph:"ögrímönt"},
+{t:"Számlázás, vevők, szállítók",en:"to invoice",hu:"számlázni",ipa:"ˈɪnvɔɪs",ph:"invojsz"},
+{t:"Számlázás, vevők, szállítók",en:"to charge",hu:"felszámítani",ipa:"tʃɑːdʒ",ph:"csádzs"},
+{t:"Számlázás, vevők, szállítók",en:"to pay",hu:"fizetni",ipa:"peɪ",ph:"pej"},
+{t:"Számlázás, vevők, szállítók",en:"to order",hu:"megrendelni",ipa:"ˈɔːdə",ph:"ódö"},
+{t:"Számlázás, vevők, szállítók",en:"to deliver",hu:"szállítani",ipa:"dɪˈlɪvə",ph:"dilivö"},
+{t:"Számlázás, vevők, szállítók",en:"to cancel",hu:"sztornózni, lemondani",ipa:"ˈkænsl",ph:"kenszl"},
+{t:"Könyvvizsgálat",en:"audit",hu:"könyvvizsgálat, ellenőrzés",ipa:"ˈɔːdɪt",ph:"ódit"},
+{t:"Könyvvizsgálat",en:"auditor",hu:"könyvvizsgáló",ipa:"ˈɔːdɪtə",ph:"óditö"},
+{t:"Könyvvizsgálat",en:"external audit",hu:"külső könyvvizsgálat",ipa:"ɪkˌstɜːnl ˈɔːdɪt",ph:"iksztőnl ódit"},
+{t:"Könyvvizsgálat",en:"internal audit",hu:"belső ellenőrzés",ipa:"ɪnˌtɜːnl ˈɔːdɪt",ph:"intőnl ódit"},
+{t:"Könyvvizsgálat",en:"statutory audit",hu:"kötelező könyvvizsgálat",ipa:"ˈstætʃətri ˈɔːdɪt",ph:"szteccsötri ódit"},
+{t:"Könyvvizsgálat",en:"audit report",hu:"könyvvizsgálói jelentés",ipa:"ˈɔːdɪt rɪˌpɔːt",ph:"ódit ripót"},
+{t:"Könyvvizsgálat",en:"audit opinion",hu:"könyvvizsgálói vélemény",ipa:"ˈɔːdɪt əˌpɪniən",ph:"ódit öpiniön"},
+{t:"Könyvvizsgálat",en:"unqualified opinion",hu:"korlátozás nélküli vélemény",ipa:"ʌnˈkwɒlɪfaɪd əˌpɪniən",ph:"ankvolifájd öpiniön"},
+{t:"Könyvvizsgálat",en:"qualified opinion",hu:"korlátozott vélemény",ipa:"ˈkwɒlɪfaɪd əˌpɪniən",ph:"kvolifájd öpiniön"},
+{t:"Könyvvizsgálat",en:"adverse opinion",hu:"elutasító vélemény",ipa:"ˈædvɜːs əˌpɪniən",ph:"edvősz öpiniön"},
+{t:"Könyvvizsgálat",en:"disclaimer of opinion",hu:"véleménynyilvánítás visszautasítása",ipa:"dɪsˈkleɪmər əv əˈpɪniən",ph:"diszklejmör öv öpiniön"},
+{t:"Könyvvizsgálat",en:"audit evidence",hu:"könyvvizsgálati bizonyíték",ipa:"ˈɔːdɪt ˌevɪdəns",ph:"ódit evidönsz"},
+{t:"Könyvvizsgálat",en:"working papers",hu:"munkapapírok",ipa:"ˈwɜːkɪŋ ˌpeɪpəz",ph:"vőkin pejpöz"},
+{t:"Könyvvizsgálat",en:"sampling",hu:"mintavételezés",ipa:"ˈsɑːmplɪŋ",ph:"számplin"},
+{t:"Könyvvizsgálat",en:"sample size",hu:"mintanagyság",ipa:"ˈsɑːmpl saɪz",ph:"számpl szájz"},
+{t:"Könyvvizsgálat",en:"audit risk",hu:"könyvvizsgálati kockázat",ipa:"ˈɔːdɪt rɪsk",ph:"ódit riszk"},
+{t:"Könyvvizsgálat",en:"inherent risk",hu:"eredendő kockázat",ipa:"ɪnˈhɪərənt rɪsk",ph:"inhiörönt riszk"},
+{t:"Könyvvizsgálat",en:"control risk",hu:"ellenőrzési kockázat",ipa:"kənˈtrəʊl rɪsk",ph:"köntroul riszk"},
+{t:"Könyvvizsgálat",en:"detection risk",hu:"feltárási kockázat",ipa:"dɪˈtekʃn rɪsk",ph:"ditéksn riszk"},
+{t:"Könyvvizsgálat",en:"misstatement",hu:"hibás állítás",ipa:"ˌmɪsˈsteɪtmənt",ph:"missztejtmönt"},
+{t:"Könyvvizsgálat",en:"material misstatement",hu:"lényeges hibás állítás",ipa:"məˈtɪəriəl ˌmɪsˈsteɪtmənt",ph:"mötiöriöl missztejtmönt"},
+{t:"Könyvvizsgálat",en:"error",hu:"hiba",ipa:"ˈerə",ph:"erö"},
+{t:"Könyvvizsgálat",en:"fraud",hu:"csalás",ipa:"frɔːd",ph:"fród"},
+{t:"Könyvvizsgálat",en:"irregularity",hu:"szabálytalanság",ipa:"ɪˌreɡjəˈlærəti",ph:"iregjuleriti"},
+{t:"Könyvvizsgálat",en:"internal control",hu:"belső kontroll",ipa:"ɪnˌtɜːnl kənˈtrəʊl",ph:"intőnl köntroul"},
+{t:"Könyvvizsgálat",en:"control environment",hu:"kontrollkörnyezet",ipa:"kənˈtrəʊl ɪnˌvaɪrənmənt",ph:"köntroul invájrönmönt"},
+{t:"Könyvvizsgálat",en:"segregation of duties",hu:"feladatok szétválasztása",ipa:"ˌseɡrɪˈɡeɪʃn əv ˈdjuːtiz",ph:"szegrigejsn öv djútiz"},
+{t:"Könyvvizsgálat",en:"authorisation",hu:"engedélyezés",ipa:"ˌɔːθəraɪˈzeɪʃn",ph:"ószörájzejsn"},
+{t:"Könyvvizsgálat",en:"approval",hu:"jóváhagyás",ipa:"əˈpruːvl",ph:"öprúvl"},
+{t:"Könyvvizsgálat",en:"sign-off",hu:"jóváhagyó aláírás",ipa:"ˈsaɪn ɒf",ph:"szájn of"},
+{t:"Könyvvizsgálat",en:"compliance",hu:"megfelelés, jogszabálykövetés",ipa:"kəmˈplaɪəns",ph:"kömplájönsz"},
+{t:"Könyvvizsgálat",en:"non-compliance",hu:"meg nem felelés",ipa:"ˌnɒn kəmˈplaɪəns",ph:"non kömplájönsz"},
+{t:"Könyvvizsgálat",en:"finding",hu:"megállapítás",ipa:"ˈfaɪndɪŋ",ph:"fájndin"},
+{t:"Könyvvizsgálat",en:"recommendation",hu:"javaslat",ipa:"ˌrekəmenˈdeɪʃn",ph:"rekömendejsn"},
+{t:"Könyvvizsgálat",en:"deficiency",hu:"hiányosság",ipa:"dɪˈfɪʃnsi",ph:"difisnszi"},
+{t:"Könyvvizsgálat",en:"weakness",hu:"gyengeség",ipa:"ˈwiːknəs",ph:"víknösz"},
+{t:"Könyvvizsgálat",en:"remediation",hu:"hiánypótlás, javítás",ipa:"rɪˌmiːdiˈeɪʃn",ph:"rimídiejsn"},
+{t:"Könyvvizsgálat",en:"follow-up",hu:"utóellenőrzés",ipa:"ˈfɒləʊ ʌp",ph:"folou ap"},
+{t:"Könyvvizsgálat",en:"substantive testing",hu:"alapvető vizsgálati eljárás",ipa:"səbˈstæntɪv ˈtestɪŋ",ph:"szöbsztentiv tesztin"},
+{t:"Könyvvizsgálat",en:"test of controls",hu:"kontrollteszt",ipa:"ˌtest əv kənˈtrəʊlz",ph:"teszt öv köntroulz"},
+{t:"Könyvvizsgálat",en:"walkthrough",hu:"folyamatvégigjárás",ipa:"ˈwɔːkθruː",ph:"vókszrú"},
+{t:"Könyvvizsgálat",en:"confirmation letter",hu:"visszaigazoló levél",ipa:"ˌkɒnfəˈmeɪʃn ˌletə",ph:"konfömejsn letö"},
+{t:"Könyvvizsgálat",en:"management letter",hu:"vezetői levél",ipa:"ˈmænɪdʒmənt ˌletə",ph:"menidzsmönt letö"},
+{t:"Könyvvizsgálat",en:"representation letter",hu:"teljességi nyilatkozat",ipa:"ˌreprɪzenˈteɪʃn ˌletə",ph:"reprizentejsn letö"},
+{t:"Könyvvizsgálat",en:"scope",hu:"hatókör",ipa:"skəʊp",ph:"szkoup"},
+{t:"Könyvvizsgálat",en:"materiality threshold",hu:"lényegességi küszöb",ipa:"məˌtɪəriˈæləti ˈθreʃhəʊld",ph:"mötiörieliti szresould"},
+{t:"Könyvvizsgálat",en:"due diligence",hu:"átvilágítás",ipa:"ˌdjuː ˈdɪlɪdʒəns",ph:"djú dilidzsönsz"},
+{t:"Könyvvizsgálat",en:"independence",hu:"függetlenség",ipa:"ˌɪndɪˈpendəns",ph:"indipendönsz"},
+{t:"Könyvvizsgálat",en:"objectivity",hu:"tárgyilagosság",ipa:"ˌɒbdʒekˈtɪvəti",ph:"obdzsektiviti"},
+{t:"Könyvvizsgálat",en:"professional scepticism",hu:"szakmai szkepticizmus",ipa:"prəˈfeʃənl ˈskeptɪsɪzəm",ph:"pröfesönl szkeptiszizöm"},
+{t:"Könyvvizsgálat",en:"conflict of interest",hu:"összeférhetetlenség",ipa:"ˌkɒnflɪkt əv ˈɪntrəst",ph:"konflikt öv intröszt"},
+{t:"Könyvvizsgálat",en:"whistleblowing",hu:"visszaélés bejelentése",ipa:"ˈwɪslbləʊɪŋ",ph:"viszlblouin"},
+{t:"Könyvvizsgálat",en:"money laundering",hu:"pénzmosás",ipa:"ˈmʌni ˌlɔːndərɪŋ",ph:"mani lóndörin"},
+{t:"Könyvvizsgálat",en:"risk assessment",hu:"kockázatértékelés",ipa:"ˈrɪsk əˌsesmənt",ph:"riszk öszeszmönt"},
+{t:"Könyvvizsgálat",en:"checklist",hu:"ellenőrzőlista",ipa:"ˈtʃeklɪst",ph:"cseklizt"},
+{t:"Könyvvizsgálat",en:"to verify",hu:"ellenőrizni, igazolni",ipa:"ˈverɪfaɪ",ph:"verifáj"},
+{t:"Könyvvizsgálat",en:"to review",hu:"átnézni, felülvizsgálni",ipa:"rɪˈvjuː",ph:"rivjú"},
+{t:"Könyvvizsgálat",en:"to certify",hu:"igazolni, hitelesíteni",ipa:"ˈsɜːtɪfaɪ",ph:"szőtifáj"},
+{t:"Könyvvizsgálat",en:"to disclose",hu:"közzétenni, feltárni",ipa:"dɪsˈkləʊz",ph:"diszklouz"},
+{t:"Könyvvizsgálat",en:"to comply with",hu:"megfelelni valaminek",ipa:"kəmˈplaɪ wɪð",ph:"kömpláj vid"},
+{t:"Vállalati pénzügyek",en:"finance",hu:"pénzügy",ipa:"ˈfaɪnæns",ph:"fájnensz"},
+{t:"Vállalati pénzügyek",en:"financial",hu:"pénzügyi",ipa:"faɪˈnænʃl",ph:"fájnensl"},
+{t:"Vállalati pénzügyek",en:"funding",hu:"finanszírozás",ipa:"ˈfʌndɪŋ",ph:"fandin"},
+{t:"Vállalati pénzügyek",en:"financing",hu:"finanszírozás",ipa:"faɪˈnænsɪŋ",ph:"fájnenszin"},
+{t:"Vállalati pénzügyek",en:"investment",hu:"befektetés, beruházás",ipa:"ɪnˈvestmənt",ph:"invesztmönt"},
+{t:"Vállalati pénzügyek",en:"capital expenditure",hu:"beruházási kiadás",ipa:"ˈkæpɪtl ɪkˌspendɪtʃə",ph:"kepitl ikszpendicsö"},
+{t:"Vállalati pénzügyek",en:"operating expenditure",hu:"működési kiadás",ipa:"ˈɒpəreɪtɪŋ ɪkˌspendɪtʃə",ph:"opörejtin ikszpendicsö"},
+{t:"Vállalati pénzügyek",en:"return on investment",hu:"befektetés megtérülése",ipa:"rɪˌtɜːn ɒn ɪnˈvestmənt",ph:"ritőn on invesztmönt"},
+{t:"Vállalati pénzügyek",en:"payback period",hu:"megtérülési idő",ipa:"ˈpeɪbæk ˌpɪəriəd",ph:"pejbek piöriöd"},
+{t:"Vállalati pénzügyek",en:"net present value",hu:"nettó jelenérték",ipa:"ˌnet ˌpreznt ˈvæljuː",ph:"net preznt velyú"},
+{t:"Vállalati pénzügyek",en:"internal rate of return",hu:"belső megtérülési ráta",ipa:"ɪnˌtɜːnl ˌreɪt əv rɪˈtɜːn",ph:"intőnl rejt öv ritőn"},
+{t:"Vállalati pénzügyek",en:"discount rate",hu:"diszkontráta",ipa:"ˈdɪskaʊnt reɪt",ph:"diszkaunt rejt"},
+{t:"Vállalati pénzügyek",en:"present value",hu:"jelenérték",ipa:"ˌpreznt ˈvæljuː",ph:"preznt velyú"},
+{t:"Vállalati pénzügyek",en:"future value",hu:"jövőérték",ipa:"ˌfjuːtʃə ˈvæljuː",ph:"fjúcsö velyú"},
+{t:"Vállalati pénzügyek",en:"time value of money",hu:"a pénz időértéke",ipa:"ˌtaɪm ˌvæljuː əv ˈmʌni",ph:"tájm velyú öv mani"},
+{t:"Vállalati pénzügyek",en:"cost of capital",hu:"tőkeköltség",ipa:"ˌkɒst əv ˈkæpɪtl",ph:"koszt öv kepitl"},
+{t:"Vállalati pénzügyek",en:"weighted average",hu:"súlyozott átlag",ipa:"ˌweɪtɪd ˈævərɪdʒ",ph:"vejtid evöridzs"},
+{t:"Vállalati pénzügyek",en:"valuation",hu:"értékelés",ipa:"ˌvæljuˈeɪʃn",ph:"velyuejsn"},
+{t:"Vállalati pénzügyek",en:"appraisal",hu:"értékbecslés",ipa:"əˈpreɪzl",ph:"öprejzl"},
+{t:"Vállalati pénzügyek",en:"forecast",hu:"előrejelzés",ipa:"ˈfɔːkɑːst",ph:"fókászt"},
+{t:"Vállalati pénzügyek",en:"projection",hu:"előrevetítés",ipa:"prəˈdʒekʃn",ph:"prödzseksn"},
+{t:"Vállalati pénzügyek",en:"business plan",hu:"üzleti terv",ipa:"ˈbɪznəs plæn",ph:"biznösz plen"},
+{t:"Vállalati pénzügyek",en:"feasibility study",hu:"megvalósíthatósági tanulmány",ipa:"ˌfiːzəˈbɪləti ˌstʌdi",ph:"fízöbiliti sztadi"},
+{t:"Vállalati pénzügyek",en:"cash management",hu:"pénzgazdálkodás",ipa:"ˈkæʃ ˌmænɪdʒmənt",ph:"kes menidzsmönt"},
+{t:"Vállalati pénzügyek",en:"treasury",hu:"pénzgazdálkodás, kincstár",ipa:"ˈtreʒəri",ph:"trezsöri"},
+{t:"Vállalati pénzügyek",en:"merger",hu:"egyesülés",ipa:"ˈmɜːdʒə",ph:"mődzsö"},
+{t:"Vállalati pénzügyek",en:"acquisition",hu:"felvásárlás",ipa:"ˌækwɪˈzɪʃn",ph:"ekvizisn"},
+{t:"Vállalati pénzügyek",en:"takeover",hu:"vállalatfelvásárlás",ipa:"ˈteɪkəʊvə",ph:"tejkouvö"},
+{t:"Vállalati pénzügyek",en:"divestment",hu:"kivonulás, eladás",ipa:"daɪˈvestmənt",ph:"dájvesztmönt"},
+{t:"Vállalati pénzügyek",en:"restructuring",hu:"átszervezés",ipa:"riːˈstrʌktʃərɪŋ",ph:"rísztrakcsörin"},
+{t:"Vállalati pénzügyek",en:"liquidation",hu:"felszámolás",ipa:"ˌlɪkwɪˈdeɪʃn",ph:"likvidejsn"},
+{t:"Vállalati pénzügyek",en:"bankruptcy",hu:"csőd",ipa:"ˈbæŋkrʌptsi",ph:"benkrapszi"},
+{t:"Vállalati pénzügyek",en:"winding up",hu:"végelszámolás",ipa:"ˌwaɪndɪŋ ˈʌp",ph:"vájndin ap"},
+{t:"Vállalati pénzügyek",en:"going public",hu:"tőzsdére lépés",ipa:"ˌɡəʊɪŋ ˈpʌblɪk",ph:"gouin pablik"},
+{t:"Vállalati pénzügyek",en:"initial public offering",hu:"tőzsdei bevezetés",ipa:"ɪˌnɪʃl ˌpʌblɪk ˈɒfərɪŋ",ph:"inisl pablik oförin"},
+{t:"Vállalati pénzügyek",en:"venture capital",hu:"kockázati tőke",ipa:"ˈventʃə ˌkæpɪtl",ph:"vencsö kepitl"},
+{t:"Vállalati pénzügyek",en:"private equity",hu:"magántőke",ipa:"ˌpraɪvət ˈekwəti",ph:"prájvöt ekvöti"},
+{t:"Vállalati pénzügyek",en:"shareholder",hu:"részvényes",ipa:"ˈʃeəhəʊldə",ph:"seöhouldö"},
+{t:"Vállalati pénzügyek",en:"stakeholder",hu:"érdekelt fél",ipa:"ˈsteɪkhəʊldə",ph:"sztejkhouldö"},
+{t:"Vállalati pénzügyek",en:"board of directors",hu:"igazgatóság",ipa:"ˌbɔːd əv dəˈrektəz",ph:"bód öv direktöz"},
+{t:"Vállalati pénzügyek",en:"chief financial officer",hu:"pénzügyi igazgató",ipa:"ˌtʃiːf faɪˈnænʃl ˈɒfɪsə",ph:"csíf fájnensl ofiszö"},
+{t:"Vállalati pénzügyek",en:"annual general meeting",hu:"éves közgyűlés",ipa:"ˌænjuəl ˌdʒenrəl ˈmiːtɪŋ",ph:"enyuöl dzsenröl míting"},
+{t:"Vállalati pénzügyek",en:"subsidy",hu:"támogatás",ipa:"ˈsʌbsədi",ph:"szabszödi"},
+{t:"Vállalati pénzügyek",en:"grant",hu:"vissza nem térítendő támogatás",ipa:"ɡrɑːnt",ph:"gránt"},
+{t:"Vállalati pénzügyek",en:"bond",hu:"kötvény",ipa:"bɒnd",ph:"bond"},
+{t:"Vállalati pénzügyek",en:"bond issue",hu:"kötvénykibocsátás",ipa:"ˈbɒnd ˌɪʃuː",ph:"bond isú"},
+{t:"Vállalati pénzügyek",en:"share issue",hu:"részvénykibocsátás",ipa:"ˈʃeər ˌɪʃuː",ph:"seör isú"},
+{t:"Vállalati pénzügyek",en:"capital increase",hu:"tőkeemelés",ipa:"ˈkæpɪtl ˌɪnkriːs",ph:"kepitl inkrísz"},
+{t:"Vállalati pénzügyek",en:"capital reduction",hu:"tőkeleszállítás",ipa:"ˈkæpɪtl rɪˌdʌkʃn",ph:"kepitl ridaksn"},
+{t:"Vállalati pénzügyek",en:"debt-to-equity ratio",hu:"idegen tőke aránya",ipa:"ˌdet tuː ˈekwəti ˈreɪʃiəʊ",ph:"det tú ekvöti rejsiou"},
+{t:"Vállalati pénzügyek",en:"financial ratio",hu:"pénzügyi mutató",ipa:"faɪˈnænʃl ˈreɪʃiəʊ",ph:"fájnensl rejsiou"},
+{t:"Vállalati pénzügyek",en:"benchmark",hu:"viszonyítási alap",ipa:"ˈbentʃmɑːk",ph:"bencsmák"},
+{t:"Vállalati pénzügyek",en:"performance indicator",hu:"teljesítménymutató",ipa:"pəˈfɔːməns ˈɪndɪkeɪtə",ph:"pöfómönsz indikejtö"},
+{t:"Vállalati pénzügyek",en:"shareholder value",hu:"tulajdonosi érték",ipa:"ˈʃeəhəʊldə ˈvæljuː",ph:"seöhouldö velyú"},
+{t:"Vállalati pénzügyek",en:"hedging",hu:"fedezeti ügylet",ipa:"ˈhedʒɪŋ",ph:"hedzsin"},
+{t:"Vállalati pénzügyek",en:"risk management",hu:"kockázatkezelés",ipa:"ˈrɪsk ˌmænɪdʒmənt",ph:"riszk menidzsmönt"},
+{t:"Vállalati pénzügyek",en:"exposure",hu:"kitettség",ipa:"ɪkˈspəʊʒə",ph:"ikszpouzsö"},
+{t:"Vállalati pénzügyek",en:"to invest",hu:"befektetni",ipa:"ɪnˈvest",ph:"inveszt"},
+{t:"Vállalati pénzügyek",en:"to raise capital",hu:"tőkét bevonni",ipa:"ˌreɪz ˈkæpɪtl",ph:"rejz kepitl"},
+{t:"Vállalati pénzügyek",en:"to finance",hu:"finanszírozni",ipa:"faɪˈnæns",ph:"fájnensz"},
+{t:"Vállalati pénzügyek",en:"to merge",hu:"egyesülni",ipa:"mɜːdʒ",ph:"mődzs"},
+{t:"Vállalati pénzügyek",en:"to acquire",hu:"megszerezni, felvásárolni",ipa:"əˈkwaɪə",ph:"ökvájö"},
+{t:"Befektetés és tőzsde",en:"stock exchange",hu:"tőzsde",ipa:"ˈstɒk ɪksˌtʃeɪndʒ",ph:"sztok ikszcsejndzs"},
+{t:"Befektetés és tőzsde",en:"stock market",hu:"részvénypiac",ipa:"ˈstɒk ˌmɑːkɪt",ph:"sztok mákit"},
+{t:"Befektetés és tőzsde",en:"share",hu:"részvény",ipa:"ʃeə",ph:"seö"},
+{t:"Befektetés és tőzsde",en:"stock",hu:"részvény, készlet",ipa:"stɒk",ph:"sztok"},
+{t:"Befektetés és tőzsde",en:"ordinary share",hu:"törzsrészvény",ipa:"ˈɔːdnri ʃeə",ph:"ódnri seö"},
+{t:"Befektetés és tőzsde",en:"preference share",hu:"elsőbbségi részvény",ipa:"ˈprefrəns ʃeə",ph:"prefrönsz seö"},
+{t:"Befektetés és tőzsde",en:"share price",hu:"részvényárfolyam",ipa:"ˈʃeə praɪs",ph:"seö prájsz"},
+{t:"Befektetés és tőzsde",en:"market capitalisation",hu:"piaci kapitalizáció",ipa:"ˈmɑːkɪt ˌkæpɪtəlaɪˈzeɪʃn",ph:"mákit kepitölájzejsn"},
+{t:"Befektetés és tőzsde",en:"index",hu:"index",ipa:"ˈɪndeks",ph:"indeksz"},
+{t:"Befektetés és tőzsde",en:"portfolio",hu:"portfólió",ipa:"pɔːtˈfəʊliəʊ",ph:"pótfouliou"},
+{t:"Befektetés és tőzsde",en:"diversification",hu:"diverzifikáció",ipa:"daɪˌvɜːsɪfɪˈkeɪʃn",ph:"dájvőszifikejsn"},
+{t:"Befektetés és tőzsde",en:"asset allocation",hu:"eszközallokáció",ipa:"ˈæset ˌæləˈkeɪʃn",ph:"eszet elökejsn"},
+{t:"Befektetés és tőzsde",en:"investor",hu:"befektető",ipa:"ɪnˈvestə",ph:"invesztö"},
+{t:"Befektetés és tőzsde",en:"broker",hu:"bróker, ügynök",ipa:"ˈbrəʊkə",ph:"broukö"},
+{t:"Befektetés és tőzsde",en:"brokerage fee",hu:"brókerdíj",ipa:"ˈbrəʊkərɪdʒ fiː",ph:"brouköridzs fí"},
+{t:"Befektetés és tőzsde",en:"trading",hu:"kereskedés",ipa:"ˈtreɪdɪŋ",ph:"trejdin"},
+{t:"Befektetés és tőzsde",en:"trader",hu:"kereskedő",ipa:"ˈtreɪdə",ph:"trejdö"},
+{t:"Befektetés és tőzsde",en:"bid price",hu:"vételi ár",ipa:"ˈbɪd praɪs",ph:"bid prájsz"},
+{t:"Befektetés és tőzsde",en:"ask price",hu:"eladási ár",ipa:"ˈɑːsk praɪs",ph:"ászk prájsz"},
+{t:"Befektetés és tőzsde",en:"spread",hu:"árrés, különbözet",ipa:"spred",ph:"szpred"},
+{t:"Befektetés és tőzsde",en:"volume",hu:"forgalom, mennyiség",ipa:"ˈvɒljuːm",ph:"voljúm"},
+{t:"Befektetés és tőzsde",en:"volatility",hu:"volatilitás, ingadozás",ipa:"ˌvɒləˈtɪləti",ph:"volötiliti"},
+{t:"Befektetés és tőzsde",en:"bull market",hu:"emelkedő piac",ipa:"ˈbʊl ˌmɑːkɪt",ph:"bul mákit"},
+{t:"Befektetés és tőzsde",en:"bear market",hu:"eső piac",ipa:"ˈbeə ˌmɑːkɪt",ph:"beö mákit"},
+{t:"Befektetés és tőzsde",en:"rally",hu:"árfolyam-emelkedés",ipa:"ˈræli",ph:"reli"},
+{t:"Befektetés és tőzsde",en:"crash",hu:"tőzsdei összeomlás",ipa:"kræʃ",ph:"kres"},
+{t:"Befektetés és tőzsde",en:"correction",hu:"korrekció",ipa:"kəˈrekʃn",ph:"köreksn"},
+{t:"Befektetés és tőzsde",en:"bubble",hu:"buborék",ipa:"ˈbʌbl",ph:"babl"},
+{t:"Befektetés és tőzsde",en:"yield",hu:"hozam",ipa:"jiːld",ph:"jíld"},
+{t:"Befektetés és tőzsde",en:"dividend yield",hu:"osztalékhozam",ipa:"ˈdɪvɪdend jiːld",ph:"dividend jíld"},
+{t:"Befektetés és tőzsde",en:"capital gain",hu:"árfolyamnyereség",ipa:"ˈkæpɪtl ɡeɪn",ph:"kepitl gejn"},
+{t:"Befektetés és tőzsde",en:"capital loss",hu:"árfolyamveszteség",ipa:"ˈkæpɪtl lɒs",ph:"kepitl losz"},
+{t:"Befektetés és tőzsde",en:"risk premium",hu:"kockázati prémium",ipa:"ˈrɪsk ˌpriːmiəm",ph:"riszk prímiöm"},
+{t:"Befektetés és tőzsde",en:"government bond",hu:"állampapír",ipa:"ˈɡʌvnmənt bɒnd",ph:"gavnmönt bond"},
+{t:"Befektetés és tőzsde",en:"corporate bond",hu:"vállalati kötvény",ipa:"ˈkɔːpərət bɒnd",ph:"kópöröt bond"},
+{t:"Befektetés és tőzsde",en:"coupon",hu:"kamatszelvény",ipa:"ˈkuːpɒn",ph:"kúpon"},
+{t:"Befektetés és tőzsde",en:"face value",hu:"névérték",ipa:"ˈfeɪs ˌvæljuː",ph:"fejsz velyú"},
+{t:"Befektetés és tőzsde",en:"nominal value",hu:"névérték",ipa:"ˈnɒmɪnl ˌvæljuː",ph:"nominl velyú"},
+{t:"Befektetés és tőzsde",en:"mutual fund",hu:"befektetési alap",ipa:"ˈmjuːtʃuəl fʌnd",ph:"mjúcsuöl fand"},
+{t:"Befektetés és tőzsde",en:"investment fund",hu:"befektetési alap",ipa:"ɪnˈvestmənt fʌnd",ph:"invesztmönt fand"},
+{t:"Befektetés és tőzsde",en:"hedge fund",hu:"fedezeti alap",ipa:"ˈhedʒ fʌnd",ph:"hedzs fand"},
+{t:"Befektetés és tőzsde",en:"derivative",hu:"származtatott ügylet",ipa:"dɪˈrɪvətɪv",ph:"dirivötiv"},
+{t:"Befektetés és tőzsde",en:"option",hu:"opció",ipa:"ˈɒpʃn",ph:"opsn"},
+{t:"Befektetés és tőzsde",en:"futures contract",hu:"határidős ügylet",ipa:"ˈfjuːtʃəz ˌkɒntrækt",ph:"fjúcsöz kontrekt"},
+{t:"Befektetés és tőzsde",en:"forward contract",hu:"határidős szerződés",ipa:"ˈfɔːwəd ˌkɒntrækt",ph:"fóvöd kontrekt"},
+{t:"Befektetés és tőzsde",en:"swap",hu:"csereügylet",ipa:"swɒp",ph:"szvop"},
+{t:"Befektetés és tőzsde",en:"commodity",hu:"árutőzsdei termék",ipa:"kəˈmɒdəti",ph:"kömodöti"},
+{t:"Befektetés és tőzsde",en:"speculation",hu:"spekuláció",ipa:"ˌspekjuˈleɪʃn",ph:"szpekjulejsn"},
+{t:"Befektetés és tőzsde",en:"arbitrage",hu:"arbitrázs",ipa:"ˈɑːbɪtrɑːʒ",ph:"ábitrázs"},
+{t:"Befektetés és tőzsde",en:"liquidity risk",hu:"likviditási kockázat",ipa:"lɪˈkwɪdəti rɪsk",ph:"likviditi riszk"},
+{t:"Befektetés és tőzsde",en:"market risk",hu:"piaci kockázat",ipa:"ˈmɑːkɪt rɪsk",ph:"mákit riszk"},
+{t:"Befektetés és tőzsde",en:"credit risk",hu:"hitelkockázat",ipa:"ˈkredɪt rɪsk",ph:"kredit riszk"},
+{t:"Befektetés és tőzsde",en:"inflation",hu:"infláció",ipa:"ɪnˈfleɪʃn",ph:"inflejsn"},
+{t:"Befektetés és tőzsde",en:"deflation",hu:"defláció",ipa:"dɪˈfleɪʃn",ph:"diflejsn"},
+{t:"Befektetés és tőzsde",en:"recession",hu:"recesszió",ipa:"rɪˈseʃn",ph:"riszesn"},
+{t:"Befektetés és tőzsde",en:"growth",hu:"növekedés",ipa:"ɡrəʊθ",ph:"grousz"},
+{t:"Befektetés és tőzsde",en:"gross domestic product",hu:"bruttó hazai termék",ipa:"ˌɡrəʊs dəˌmestɪk ˈprɒdʌkt",ph:"grousz dömesztik prodakt"},
+{t:"Befektetés és tőzsde",en:"central bank",hu:"jegybank",ipa:"ˌsentrəl ˈbæŋk",ph:"szentröl benk"},
+{t:"Befektetés és tőzsde",en:"base rate",hu:"alapkamat",ipa:"ˈbeɪs reɪt",ph:"bejsz rejt"},
+{t:"Befektetés és tőzsde",en:"monetary policy",hu:"monetáris politika",ipa:"ˈmʌnɪtri ˈpɒləsi",ph:"manitri polöszi"},
+{t:"Befektetés és tőzsde",en:"fiscal policy",hu:"fiskális politika",ipa:"ˈfɪskl ˈpɒləsi",ph:"fiszkl polöszi"},
+{t:"Befektetés és tőzsde",en:"supply and demand",hu:"kereslet és kínálat",ipa:"səˌplaɪ ənd dɪˈmɑːnd",ph:"szöpláj önd dimánd"},
+{t:"Befektetés és tőzsde",en:"market value",hu:"piaci érték",ipa:"ˈmɑːkɪt ˌvæljuː",ph:"mákit velyú"},
+{t:"Befektetés és tőzsde",en:"to buy",hu:"venni",ipa:"baɪ",ph:"báj"},
+{t:"Befektetés és tőzsde",en:"to sell",hu:"eladni",ipa:"sel",ph:"szel"},
+{t:"Befektetés és tőzsde",en:"to trade",hu:"kereskedni",ipa:"treɪd",ph:"trejd"},
+{t:"Befektetés és tőzsde",en:"to hedge",hu:"fedezni",ipa:"hedʒ",ph:"hedzs"},
+{t:"Kontrolling és tervezés",en:"controlling",hu:"kontrolling",ipa:"kənˈtrəʊlɪŋ",ph:"köntroulin"},
+{t:"Kontrolling és tervezés",en:"management accounting",hu:"vezetői számvitel",ipa:"ˈmænɪdʒmənt əˌkaʊntɪŋ",ph:"menidzsmönt ökauntin"},
+{t:"Kontrolling és tervezés",en:"budget",hu:"költségvetés, büdzsé",ipa:"ˈbʌdʒɪt",ph:"badzsit"},
+{t:"Kontrolling és tervezés",en:"budgeting",hu:"költségvetés-készítés",ipa:"ˈbʌdʒɪtɪŋ",ph:"badzsitin"},
+{t:"Kontrolling és tervezés",en:"annual budget",hu:"éves költségvetés",ipa:"ˈænjuəl ˈbʌdʒɪt",ph:"enyuöl badzsit"},
+{t:"Kontrolling és tervezés",en:"rolling forecast",hu:"gördülő előrejelzés",ipa:"ˌrəʊlɪŋ ˈfɔːkɑːst",ph:"roulin fókászt"},
+{t:"Kontrolling és tervezés",en:"actuals",hu:"tényadatok",ipa:"ˈæktʃuəlz",ph:"ekcsuölz"},
+{t:"Kontrolling és tervezés",en:"plan",hu:"terv",ipa:"plæn",ph:"plen"},
+{t:"Kontrolling és tervezés",en:"target",hu:"célérték",ipa:"ˈtɑːɡɪt",ph:"tágit"},
+{t:"Kontrolling és tervezés",en:"variance",hu:"eltérés",ipa:"ˈveəriəns",ph:"veöriönsz"},
+{t:"Kontrolling és tervezés",en:"variance analysis",hu:"eltéréselemzés",ipa:"ˈveəriəns əˌnæləsɪs",ph:"veöriönsz önelöszisz"},
+{t:"Kontrolling és tervezés",en:"favourable variance",hu:"kedvező eltérés",ipa:"ˈfeɪvərəbl ˈveəriəns",ph:"fejvöröbl veöriönsz"},
+{t:"Kontrolling és tervezés",en:"adverse variance",hu:"kedvezőtlen eltérés",ipa:"ˈædvɜːs ˈveəriəns",ph:"edvősz veöriönsz"},
+{t:"Kontrolling és tervezés",en:"deviation",hu:"eltérés",ipa:"ˌdiːviˈeɪʃn",ph:"dívijejsn"},
+{t:"Kontrolling és tervezés",en:"forecast accuracy",hu:"előrejelzési pontosság",ipa:"ˈfɔːkɑːst ˈækjərəsi",ph:"fókászt ekjöröszi"},
+{t:"Kontrolling és tervezés",en:"key performance indicator",hu:"kulcs teljesítménymutató",ipa:"ˌkiː pəˈfɔːməns ˈɪndɪkeɪtə",ph:"kí pöfómönsz indikejtö"},
+{t:"Kontrolling és tervezés",en:"dashboard",hu:"műszerfal, áttekintő",ipa:"ˈdæʃbɔːd",ph:"desbód"},
+{t:"Kontrolling és tervezés",en:"report",hu:"jelentés",ipa:"rɪˈpɔːt",ph:"ripót"},
+{t:"Kontrolling és tervezés",en:"reporting",hu:"riportálás",ipa:"rɪˈpɔːtɪŋ",ph:"ripótin"},
+{t:"Kontrolling és tervezés",en:"management report",hu:"vezetői jelentés",ipa:"ˈmænɪdʒmənt rɪˌpɔːt",ph:"menidzsmönt ripót"},
+{t:"Kontrolling és tervezés",en:"monthly report",hu:"havi jelentés",ipa:"ˈmʌnθli rɪˌpɔːt",ph:"manszli ripót"},
+{t:"Kontrolling és tervezés",en:"quarterly",hu:"negyedéves",ipa:"ˈkwɔːtəli",ph:"kvótöli"},
+{t:"Kontrolling és tervezés",en:"year to date",hu:"év elejétől",ipa:"ˌjɪə tə ˈdeɪt",ph:"jiö tö dejt"},
+{t:"Kontrolling és tervezés",en:"prior year",hu:"előző év",ipa:"ˌpraɪə ˈjɪə",ph:"prájö jiö"},
+{t:"Kontrolling és tervezés",en:"period",hu:"időszak",ipa:"ˈpɪəriəd",ph:"piöriöd"},
+{t:"Kontrolling és tervezés",en:"trend",hu:"tendencia",ipa:"trend",ph:"trend"},
+{t:"Kontrolling és tervezés",en:"breakdown",hu:"bontás, részletezés",ipa:"ˈbreɪkdaʊn",ph:"brejkdaun"},
+{t:"Kontrolling és tervezés",en:"allocation key",hu:"felosztási kulcs",ipa:"ˌæləˈkeɪʃn kiː",ph:"elökejsn kí"},
+{t:"Kontrolling és tervezés",en:"cost driver",hu:"költségokozó",ipa:"ˈkɒst ˌdraɪvə",ph:"koszt drájvö"},
+{t:"Kontrolling és tervezés",en:"activity-based costing",hu:"tevékenységalapú költségszámítás",ipa:"ækˈtɪvəti beɪst ˈkɒstɪŋ",ph:"ektivöti bejszt kosztin"},
+{t:"Kontrolling és tervezés",en:"efficiency",hu:"hatékonyság",ipa:"ɪˈfɪʃnsi",ph:"ifisnszi"},
+{t:"Kontrolling és tervezés",en:"effectiveness",hu:"eredményesség",ipa:"ɪˈfektɪvnəs",ph:"ifektivnösz"},
+{t:"Kontrolling és tervezés",en:"productivity",hu:"termelékenység",ipa:"ˌprɒdʌkˈtɪvəti",ph:"prodaktiviti"},
+{t:"Kontrolling és tervezés",en:"utilisation",hu:"kihasználtság",ipa:"ˌjuːtəlaɪˈzeɪʃn",ph:"jútölájzejsn"},
+{t:"Kontrolling és tervezés",en:"capacity",hu:"kapacitás",ipa:"kəˈpæsəti",ph:"köpeszöti"},
+{t:"Kontrolling és tervezés",en:"bottleneck",hu:"szűk keresztmetszet",ipa:"ˈbɒtlnek",ph:"botlnek"},
+{t:"Kontrolling és tervezés",en:"cost saving",hu:"költségmegtakarítás",ipa:"ˈkɒst ˌseɪvɪŋ",ph:"koszt szejvin"},
+{t:"Kontrolling és tervezés",en:"cost reduction",hu:"költségcsökkentés",ipa:"ˈkɒst rɪˌdʌkʃn",ph:"koszt ridaksn"},
+{t:"Kontrolling és tervezés",en:"scenario",hu:"forgatókönyv",ipa:"səˈnɑːriəʊ",ph:"sznáriou"},
+{t:"Kontrolling és tervezés",en:"sensitivity analysis",hu:"érzékenységvizsgálat",ipa:"ˌsensəˈtɪvəti əˌnæləsɪs",ph:"szenszötivöti önelöszisz"},
+{t:"Kontrolling és tervezés",en:"assumption",hu:"feltételezés",ipa:"əˈsʌmpʃn",ph:"öszampsn"},
+{t:"Kontrolling és tervezés",en:"estimate",hu:"becslés",ipa:"ˈestɪmət",ph:"esztimöt"},
+{t:"Kontrolling és tervezés",en:"baseline",hu:"kiindulási alap",ipa:"ˈbeɪslaɪn",ph:"bejszlájn"},
+{t:"Kontrolling és tervezés",en:"milestone",hu:"mérföldkő",ipa:"ˈmaɪlstəʊn",ph:"májlsztoun"},
+{t:"Kontrolling és tervezés",en:"run rate",hu:"futó ütem",ipa:"ˈrʌn reɪt",ph:"ran rejt"},
+{t:"Kontrolling és tervezés",en:"overspend",hu:"túlköltés",ipa:"ˌəʊvəˈspend",ph:"ouvöszpend"},
+{t:"Kontrolling és tervezés",en:"underspend",hu:"alulköltés",ipa:"ˌʌndəˈspend",ph:"andöszpend"},
+{t:"Kontrolling és tervezés",en:"approval limit",hu:"jóváhagyási limit",ipa:"əˈpruːvl ˌlɪmɪt",ph:"öprúvl limit"},
+{t:"Kontrolling és tervezés",en:"cost control",hu:"költségkontroll",ipa:"ˈkɒst kənˌtrəʊl",ph:"koszt köntroul"},
+{t:"Kontrolling és tervezés",en:"to budget",hu:"tervezni, betervezni",ipa:"ˈbʌdʒɪt",ph:"badzsit"},
+{t:"Kontrolling és tervezés",en:"to forecast",hu:"előre jelezni",ipa:"ˈfɔːkɑːst",ph:"fókászt"},
+{t:"Kontrolling és tervezés",en:"to monitor",hu:"nyomon követni",ipa:"ˈmɒnɪtə",ph:"monitö"},
+{t:"Kontrolling és tervezés",en:"to analyse",hu:"elemezni",ipa:"ˈænəlaɪz",ph:"enölájz"},
+{t:"Kontrolling és tervezés",en:"to justify",hu:"indokolni",ipa:"ˈdʒʌstɪfaɪ",ph:"dzsasztifáj"},
+{t:"Cégformák és jog",en:"company",hu:"cég, vállalat",ipa:"ˈkʌmpəni",ph:"kampöni"},
+{t:"Cégformák és jog",en:"business",hu:"vállalkozás, üzlet",ipa:"ˈbɪznəs",ph:"biznösz"},
+{t:"Cégformák és jog",en:"enterprise",hu:"vállalkozás",ipa:"ˈentəpraɪz",ph:"entöprájz"},
+{t:"Cégformák és jog",en:"firm",hu:"cég",ipa:"fɜːm",ph:"főm"},
+{t:"Cégformák és jog",en:"corporation",hu:"részvénytársaság",ipa:"ˌkɔːpəˈreɪʃn",ph:"kópörejsn"},
+{t:"Cégformák és jog",en:"limited liability company",hu:"korlátolt felelősségű társaság",ipa:"ˈlɪmɪtɪd ˌlaɪəˈbɪləti ˈkʌmpəni",ph:"limitid lájöbiliti kampöni"},
+{t:"Cégformák és jog",en:"public limited company",hu:"nyilvánosan működő részvénytársaság",ipa:"ˌpʌblɪk ˈlɪmɪtɪd ˈkʌmpəni",ph:"pablik limitid kampöni"},
+{t:"Cégformák és jog",en:"partnership",hu:"betéti társaság, társulás",ipa:"ˈpɑːtnəʃɪp",ph:"pátnösip"},
+{t:"Cégformák és jog",en:"branch",hu:"fióktelep",ipa:"brɑːntʃ",ph:"bráncs"},
+{t:"Cégformák és jog",en:"headquarters",hu:"székhely, központ",ipa:"ˈhedˌkwɔːtəz",ph:"hedkvótöz"},
+{t:"Cégformák és jog",en:"registered office",hu:"székhely",ipa:"ˌredʒɪstəd ˈɒfɪs",ph:"redzsisztöd ofisz"},
+{t:"Cégformák és jog",en:"company registration",hu:"cégbejegyzés",ipa:"ˈkʌmpəni ˌredʒɪˈstreɪʃn",ph:"kampöni redzsisztrejsn"},
+{t:"Cégformák és jog",en:"registration number",hu:"cégjegyzékszám",ipa:"ˌredʒɪˈstreɪʃn ˈnʌmbə",ph:"redzsisztrejsn nambö"},
+{t:"Cégformák és jog",en:"commercial register",hu:"cégjegyzék",ipa:"kəˈmɜːʃl ˈredʒɪstə",ph:"kömősl redzsisztö"},
+{t:"Cégformák és jog",en:"articles of association",hu:"társasági szerződés",ipa:"ˈɑːtɪklz əv əˌsəʊsiˈeɪʃn",ph:"átiklz öv öszousziejsn"},
+{t:"Cégformák és jog",en:"memorandum",hu:"alapító okirat",ipa:"ˌmeməˈrændəm",ph:"memörendöm"},
+{t:"Cégformák és jog",en:"founder",hu:"alapító",ipa:"ˈfaʊndə",ph:"faundö"},
+{t:"Cégformák és jog",en:"owner",hu:"tulajdonos",ipa:"ˈəʊnə",ph:"ounö"},
+{t:"Cégformák és jog",en:"ownership",hu:"tulajdon",ipa:"ˈəʊnəʃɪp",ph:"ounösip"},
+{t:"Cégformák és jog",en:"managing director",hu:"ügyvezető",ipa:"ˌmænɪdʒɪŋ dəˈrektə",ph:"menidzsin direktö"},
+{t:"Cégformák és jog",en:"director",hu:"igazgató",ipa:"dəˈrektə",ph:"direktö"},
+{t:"Cégformák és jog",en:"management",hu:"vezetőség",ipa:"ˈmænɪdʒmənt",ph:"menidzsmönt"},
+{t:"Cégformák és jog",en:"supervisory board",hu:"felügyelőbizottság",ipa:"ˈsuːpəvaɪzəri bɔːd",ph:"szúpövájzöri bód"},
+{t:"Cégformák és jog",en:"power of attorney",hu:"meghatalmazás",ipa:"ˌpaʊər əv əˈtɜːni",ph:"pauör öv ötőni"},
+{t:"Cégformák és jog",en:"unlimited liability",hu:"korlátlan felelősség",ipa:"ʌnˈlɪmɪtɪd ˌlaɪəˈbɪləti",ph:"anlimitid lájöbiliti"},
+{t:"Cégformák és jog",en:"share transfer",hu:"részesedés átruházása",ipa:"ˈʃeə ˌtrænsfɜː",ph:"seö trenszfő"},
+{t:"Cégformák és jog",en:"stake",hu:"részesedés",ipa:"steɪk",ph:"sztejk"},
+{t:"Cégformák és jog",en:"clause",hu:"szerződéses kikötés",ipa:"klɔːz",ph:"klóz"},
+{t:"Cégformák és jog",en:"terms and conditions",hu:"általános szerződési feltételek",ipa:"ˌtɜːmz ənd kənˈdɪʃnz",ph:"tőmz önd köndisnz"},
+{t:"Cégformák és jog",en:"breach of contract",hu:"szerződésszegés",ipa:"ˌbriːtʃ əv ˈkɒntrækt",ph:"brícs öv kontrekt"},
+{t:"Cégformák és jog",en:"termination",hu:"megszüntetés, felmondás",ipa:"ˌtɜːmɪˈneɪʃn",ph:"tőminejsn"},
+{t:"Cégformák és jog",en:"amendment",hu:"módosítás",ipa:"əˈmendmənt",ph:"ömendmönt"},
+{t:"Cégformák és jog",en:"annex",hu:"melléklet",ipa:"ˈæneks",ph:"eneksz"},
+{t:"Cégformák és jog",en:"signature",hu:"aláírás",ipa:"ˈsɪɡnətʃə",ph:"szignöcsö"},
+{t:"Cégformák és jog",en:"stamp",hu:"bélyegző",ipa:"stæmp",ph:"sztemp"},
+{t:"Cégformák és jog",en:"legal entity",hu:"jogi személy",ipa:"ˌliːɡl ˈentəti",ph:"lígl entöti"},
+{t:"Cégformák és jog",en:"natural person",hu:"természetes személy",ipa:"ˌnætʃrəl ˈpɜːsn",ph:"necsröl pőszn"},
+{t:"Cégformák és jog",en:"regulation",hu:"rendelet, szabályozás",ipa:"ˌreɡjuˈleɪʃn",ph:"regjulejsn"},
+{t:"Cégformák és jog",en:"legislation",hu:"jogszabály",ipa:"ˌledʒɪsˈleɪʃn",ph:"ledzsiszlejsn"},
+{t:"Cégformák és jog",en:"act",hu:"törvény",ipa:"ækt",ph:"ekt"},
+{t:"Cégformák és jog",en:"statute",hu:"törvény, statútum",ipa:"ˈstætʃuːt",ph:"szteccsút"},
+{t:"Cégformák és jog",en:"standard",hu:"szabvány, standard",ipa:"ˈstændəd",ph:"sztendöd"},
+{t:"Cégformák és jog",en:"accounting standard",hu:"számviteli standard",ipa:"əˈkaʊntɪŋ ˈstændəd",ph:"ökauntin sztendöd"},
+{t:"Cégformák és jog",en:"obligation",hu:"kötelezettség",ipa:"ˌɒblɪˈɡeɪʃn",ph:"obligejsn"},
+{t:"Cégformák és jog",en:"entitlement",hu:"jogosultság",ipa:"ɪnˈtaɪtlmənt",ph:"intájtlmönt"},
+{t:"Cégformák és jog",en:"claim",hu:"követelés, igény",ipa:"kleɪm",ph:"klejm"},
+{t:"Cégformák és jog",en:"dispute",hu:"jogvita",ipa:"dɪˈspjuːt",ph:"diszpjút"},
+{t:"Cégformák és jog",en:"court",hu:"bíróság",ipa:"kɔːt",ph:"kót"},
+{t:"Cégformák és jog",en:"lawyer",hu:"ügyvéd",ipa:"ˈlɔɪə",ph:"lojö"},
+{t:"Cégformák és jog",en:"licence",hu:"engedély",ipa:"ˈlaɪsns",ph:"lájsznsz"},
+{t:"Cégformák és jog",en:"permit",hu:"engedély",ipa:"ˈpɜːmɪt",ph:"pőmit"},
+{t:"Cégformák és jog",en:"to register",hu:"bejegyezni",ipa:"ˈredʒɪstə",ph:"redzsisztö"},
+{t:"Cégformák és jog",en:"to sign",hu:"aláírni",ipa:"saɪn",ph:"szájn"},
+{t:"Cégformák és jog",en:"to enforce",hu:"érvényesíteni",ipa:"ɪnˈfɔːs",ph:"infósz"},
+{t:"Gyakori igék",en:"to be",hu:"lenni",ipa:"biː",ph:"bí"},
+{t:"Gyakori igék",en:"to have",hu:"birtokolni, van neki",ipa:"hæv",ph:"hev"},
+{t:"Gyakori igék",en:"to do",hu:"csinálni",ipa:"duː",ph:"dú"},
+{t:"Gyakori igék",en:"to make",hu:"készíteni",ipa:"meɪk",ph:"mejk"},
+{t:"Gyakori igék",en:"to go",hu:"menni",ipa:"ɡəʊ",ph:"gou"},
+{t:"Gyakori igék",en:"to come",hu:"jönni",ipa:"kʌm",ph:"kam"},
+{t:"Gyakori igék",en:"to get",hu:"kapni, szerezni",ipa:"ɡet",ph:"get"},
+{t:"Gyakori igék",en:"to take",hu:"venni, elvinni",ipa:"teɪk",ph:"tejk"},
+{t:"Gyakori igék",en:"to give",hu:"adni",ipa:"ɡɪv",ph:"giv"},
+{t:"Gyakori igék",en:"to put",hu:"tenni, helyezni",ipa:"pʊt",ph:"put"},
+{t:"Gyakori igék",en:"to know",hu:"tudni, ismerni",ipa:"nəʊ",ph:"nou"},
+{t:"Gyakori igék",en:"to think",hu:"gondolni",ipa:"θɪŋk",ph:"szink"},
+{t:"Gyakori igék",en:"to see",hu:"látni",ipa:"siː",ph:"szí"},
+{t:"Gyakori igék",en:"to look",hu:"nézni",ipa:"lʊk",ph:"luk"},
+{t:"Gyakori igék",en:"to want",hu:"akarni",ipa:"wɒnt",ph:"vont"},
+{t:"Gyakori igék",en:"to need",hu:"szükség van rá",ipa:"niːd",ph:"níd"},
+{t:"Gyakori igék",en:"to find",hu:"találni",ipa:"faɪnd",ph:"fájnd"},
+{t:"Gyakori igék",en:"to tell",hu:"mondani, elmondani",ipa:"tel",ph:"tel"},
+{t:"Gyakori igék",en:"to say",hu:"mondani",ipa:"seɪ",ph:"szej"},
+{t:"Gyakori igék",en:"to ask",hu:"kérdezni, kérni",ipa:"ɑːsk",ph:"ászk"},
+{t:"Gyakori igék",en:"to work",hu:"dolgozni, működni",ipa:"wɜːk",ph:"vők"},
+{t:"Gyakori igék",en:"to use",hu:"használni",ipa:"juːz",ph:"júz"},
+{t:"Gyakori igék",en:"to try",hu:"megpróbálni",ipa:"traɪ",ph:"tráj"},
+{t:"Gyakori igék",en:"to call",hu:"hívni",ipa:"kɔːl",ph:"kól"},
+{t:"Gyakori igék",en:"to feel",hu:"érezni",ipa:"fiːl",ph:"fíl"},
+{t:"Gyakori igék",en:"to become",hu:"válni valamivé",ipa:"bɪˈkʌm",ph:"bikam"},
+{t:"Gyakori igék",en:"to leave",hu:"elhagyni, elmenni",ipa:"liːv",ph:"lív"},
+{t:"Gyakori igék",en:"to keep",hu:"tartani, megtartani",ipa:"kiːp",ph:"kíp"},
+{t:"Gyakori igék",en:"to let",hu:"engedni",ipa:"let",ph:"let"},
+{t:"Gyakori igék",en:"to begin",hu:"kezdeni",ipa:"bɪˈɡɪn",ph:"bigin"},
+{t:"Gyakori igék",en:"to start",hu:"elkezdeni",ipa:"stɑːt",ph:"sztát"},
+{t:"Gyakori igék",en:"to finish",hu:"befejezni",ipa:"ˈfɪnɪʃ",ph:"finis"},
+{t:"Gyakori igék",en:"to stop",hu:"megállni, abbahagyni",ipa:"stɒp",ph:"sztop"},
+{t:"Gyakori igék",en:"to continue",hu:"folytatni",ipa:"kənˈtɪnjuː",ph:"köntinjú"},
+{t:"Gyakori igék",en:"to change",hu:"változtatni",ipa:"tʃeɪndʒ",ph:"csejndzs"},
+{t:"Gyakori igék",en:"to help",hu:"segíteni",ipa:"help",ph:"help"},
+{t:"Gyakori igék",en:"to show",hu:"mutatni",ipa:"ʃəʊ",ph:"sou"},
+{t:"Gyakori igék",en:"to move",hu:"mozogni, mozdítani",ipa:"muːv",ph:"múv"},
+{t:"Gyakori igék",en:"to bring",hu:"hozni",ipa:"brɪŋ",ph:"bring"},
+{t:"Gyakori igék",en:"to send",hu:"küldeni",ipa:"send",ph:"szend"},
+{t:"Gyakori igék",en:"to receive",hu:"kapni, átvenni",ipa:"rɪˈsiːv",ph:"riszív"},
+{t:"Gyakori igék",en:"to happen",hu:"történni",ipa:"ˈhæpən",ph:"hepön"},
+{t:"Gyakori igék",en:"to seem",hu:"tűnni",ipa:"siːm",ph:"szím"},
+{t:"Gyakori igék",en:"to mean",hu:"jelenteni",ipa:"miːn",ph:"mín"},
+{t:"Gyakori igék",en:"to understand",hu:"megérteni",ipa:"ˌʌndəˈstænd",ph:"andösztend"},
+{t:"Gyakori igék",en:"to explain",hu:"elmagyarázni",ipa:"ɪkˈspleɪn",ph:"ikszplejn"},
+{t:"Gyakori igék",en:"to learn",hu:"tanulni",ipa:"lɜːn",ph:"lőn"},
+{t:"Gyakori igék",en:"to teach",hu:"tanítani",ipa:"tiːtʃ",ph:"tícs"},
+{t:"Gyakori igék",en:"to read",hu:"olvasni",ipa:"riːd",ph:"ríd"},
+{t:"Gyakori igék",en:"to write",hu:"írni",ipa:"raɪt",ph:"rájt"},
+{t:"Gyakori igék",en:"to speak",hu:"beszélni",ipa:"spiːk",ph:"szpík"},
+{t:"Gyakori igék",en:"to talk",hu:"beszélgetni",ipa:"tɔːk",ph:"tók"},
+{t:"Gyakori igék",en:"to listen",hu:"hallgatni",ipa:"ˈlɪsn",ph:"liszn"},
+{t:"Gyakori igék",en:"to hear",hu:"hallani",ipa:"hɪə",ph:"hiö"},
+{t:"Gyakori igék",en:"to answer",hu:"válaszolni",ipa:"ˈɑːnsə",ph:"ánszö"},
+{t:"Gyakori igék",en:"to decide",hu:"dönteni",ipa:"dɪˈsaɪd",ph:"diszájd"},
+{t:"Gyakori igék",en:"to choose",hu:"választani",ipa:"tʃuːz",ph:"csúz"},
+{t:"Gyakori igék",en:"to agree",hu:"egyetérteni",ipa:"əˈɡriː",ph:"ögrí"},
+{t:"Gyakori igék",en:"to remember",hu:"emlékezni",ipa:"rɪˈmembə",ph:"rimembö"},
+{t:"Gyakori igék",en:"to forget",hu:"elfelejteni",ipa:"fəˈɡet",ph:"föget"},
+{t:"Gyakori igék",en:"to wait",hu:"várni",ipa:"weɪt",ph:"vejt"},
+{t:"Gyakori igék",en:"to meet",hu:"találkozni",ipa:"miːt",ph:"mít"},
+{t:"Gyakori igék",en:"to open",hu:"kinyitni",ipa:"ˈəʊpən",ph:"oupön"},
+{t:"Gyakori igék",en:"to close",hu:"bezárni",ipa:"kləʊz",ph:"klouz"},
+{t:"Gyakori igék",en:"to build",hu:"építeni",ipa:"bɪld",ph:"bild"},
+{t:"Gyakori igék",en:"to create",hu:"létrehozni",ipa:"kriˈeɪt",ph:"kriejt"},
+{t:"Gyakori igék",en:"to add",hu:"hozzáadni",ipa:"æd",ph:"ed"},
+{t:"Gyakori igék",en:"to remove",hu:"eltávolítani",ipa:"rɪˈmuːv",ph:"rimúv"},
+{t:"Gyakori igék",en:"to check",hu:"ellenőrizni",ipa:"tʃek",ph:"csek"},
+{t:"Gyakori igék",en:"to follow",hu:"követni",ipa:"ˈfɒləʊ",ph:"folou"},
+{t:"Gyakori igék",en:"to allow",hu:"megengedni",ipa:"əˈlaʊ",ph:"ölau"},
+{t:"Gyakori igék",en:"to expect",hu:"elvárni, számítani rá",ipa:"ɪkˈspekt",ph:"ikszpekt"},
+{t:"Gyakori igék",en:"to consider",hu:"fontolóra venni",ipa:"kənˈsɪdə",ph:"könszidö"},
+{t:"Gyakori igék",en:"to improve",hu:"javítani",ipa:"ɪmˈpruːv",ph:"imprúv"},
+{t:"Gyakori igék",en:"to increase",hu:"növelni",ipa:"ɪnˈkriːs",ph:"inkrísz"},
+{t:"Gyakori igék",en:"to reduce",hu:"csökkenteni",ipa:"rɪˈdjuːs",ph:"ridjúsz"},
+{t:"Gyakori melléknevek",en:"good",hu:"jó",ipa:"ɡʊd",ph:"gud"},
+{t:"Gyakori melléknevek",en:"bad",hu:"rossz",ipa:"bæd",ph:"bed"},
+{t:"Gyakori melléknevek",en:"new",hu:"új",ipa:"njuː",ph:"njú"},
+{t:"Gyakori melléknevek",en:"old",hu:"régi, öreg",ipa:"əʊld",ph:"ould"},
+{t:"Gyakori melléknevek",en:"big",hu:"nagy",ipa:"bɪɡ",ph:"big"},
+{t:"Gyakori melléknevek",en:"small",hu:"kicsi",ipa:"smɔːl",ph:"szmól"},
+{t:"Gyakori melléknevek",en:"large",hu:"nagy, terjedelmes",ipa:"lɑːdʒ",ph:"ládzs"},
+{t:"Gyakori melléknevek",en:"long",hu:"hosszú",ipa:"lɒŋ",ph:"long"},
+{t:"Gyakori melléknevek",en:"short",hu:"rövid",ipa:"ʃɔːt",ph:"sót"},
+{t:"Gyakori melléknevek",en:"high",hu:"magas",ipa:"haɪ",ph:"háj"},
+{t:"Gyakori melléknevek",en:"low",hu:"alacsony",ipa:"ləʊ",ph:"lou"},
+{t:"Gyakori melléknevek",en:"early",hu:"korai",ipa:"ˈɜːli",ph:"őli"},
+{t:"Gyakori melléknevek",en:"late",hu:"késői",ipa:"leɪt",ph:"lejt"},
+{t:"Gyakori melléknevek",en:"easy",hu:"könnyű",ipa:"ˈiːzi",ph:"ízi"},
+{t:"Gyakori melléknevek",en:"difficult",hu:"nehéz",ipa:"ˈdɪfɪkəlt",ph:"difikölt"},
+{t:"Gyakori melléknevek",en:"hard",hu:"kemény, nehéz",ipa:"hɑːd",ph:"hád"},
+{t:"Gyakori melléknevek",en:"important",hu:"fontos",ipa:"ɪmˈpɔːtnt",ph:"impótnt"},
+{t:"Gyakori melléknevek",en:"possible",hu:"lehetséges",ipa:"ˈpɒsəbl",ph:"poszöbl"},
+{t:"Gyakori melléknevek",en:"necessary",hu:"szükséges",ipa:"ˈnesəsəri",ph:"neszöszöri"},
+{t:"Gyakori melléknevek",en:"available",hu:"elérhető",ipa:"əˈveɪləbl",ph:"övejlöbl"},
+{t:"Gyakori melléknevek",en:"ready",hu:"kész",ipa:"ˈredi",ph:"redi"},
+{t:"Gyakori melléknevek",en:"sure",hu:"biztos",ipa:"ʃʊə",ph:"suö"},
+{t:"Gyakori melléknevek",en:"clear",hu:"világos, egyértelmű",ipa:"klɪə",ph:"kliö"},
+{t:"Gyakori melléknevek",en:"right",hu:"helyes, jobb oldali",ipa:"raɪt",ph:"rájt"},
+{t:"Gyakori melléknevek",en:"wrong",hu:"helytelen",ipa:"rɒŋ",ph:"rong"},
+{t:"Gyakori melléknevek",en:"true",hu:"igaz",ipa:"truː",ph:"trú"},
+{t:"Gyakori melléknevek",en:"false",hu:"hamis",ipa:"fɔːls",ph:"fólsz"},
+{t:"Gyakori melléknevek",en:"same",hu:"ugyanaz",ipa:"seɪm",ph:"szejm"},
+{t:"Gyakori melléknevek",en:"different",hu:"különböző",ipa:"ˈdɪfrənt",ph:"difrönt"},
+{t:"Gyakori melléknevek",en:"similar",hu:"hasonló",ipa:"ˈsɪmələ",ph:"szimölö"},
+{t:"Gyakori melléknevek",en:"full",hu:"tele",ipa:"fʊl",ph:"ful"},
+{t:"Gyakori melléknevek",en:"empty",hu:"üres",ipa:"ˈempti",ph:"empti"},
+{t:"Gyakori melléknevek",en:"strong",hu:"erős",ipa:"strɒŋ",ph:"sztrong"},
+{t:"Gyakori melléknevek",en:"weak",hu:"gyenge",ipa:"wiːk",ph:"vík"},
+{t:"Gyakori melléknevek",en:"fast",hu:"gyors",ipa:"fɑːst",ph:"fászt"},
+{t:"Gyakori melléknevek",en:"slow",hu:"lassú",ipa:"sləʊ",ph:"szlou"},
+{t:"Gyakori melléknevek",en:"cheap",hu:"olcsó",ipa:"tʃiːp",ph:"csíp"},
+{t:"Gyakori melléknevek",en:"expensive",hu:"drága",ipa:"ɪkˈspensɪv",ph:"ikszpensziv"},
+{t:"Gyakori melléknevek",en:"free",hu:"ingyenes, szabad",ipa:"friː",ph:"frí"},
+{t:"Gyakori melléknevek",en:"busy",hu:"elfoglalt",ipa:"ˈbɪzi",ph:"bizi"},
+{t:"Gyakori melléknevek",en:"safe",hu:"biztonságos",ipa:"seɪf",ph:"szejf"},
+{t:"Gyakori melléknevek",en:"dangerous",hu:"veszélyes",ipa:"ˈdeɪndʒərəs",ph:"dejndzsörösz"},
+{t:"Gyakori melléknevek",en:"useful",hu:"hasznos",ipa:"ˈjuːsfl",ph:"júszfl"},
+{t:"Gyakori melléknevek",en:"common",hu:"gyakori, közös",ipa:"ˈkɒmən",ph:"komön"},
+{t:"Gyakori melléknevek",en:"rare",hu:"ritka",ipa:"reə",ph:"reö"},
+{t:"Gyakori melléknevek",en:"main",hu:"fő",ipa:"meɪn",ph:"mejn"},
+{t:"Gyakori melléknevek",en:"whole",hu:"egész",ipa:"həʊl",ph:"houl"},
+{t:"Gyakori melléknevek",en:"several",hu:"több, néhány",ipa:"ˈsevrəl",ph:"szevröl"},
+{t:"Gyakori melléknevek",en:"enough",hu:"elég",ipa:"ɪˈnʌf",ph:"inaf"},
+{t:"Gyakori melléknevek",en:"accurate",hu:"pontos",ipa:"ˈækjərət",ph:"ekjöröt"},
+{t:"Idő és mennyiség",en:"time",hu:"idő",ipa:"taɪm",ph:"tájm"},
+{t:"Idő és mennyiség",en:"year",hu:"év",ipa:"jɪə",ph:"jiö"},
+{t:"Idő és mennyiség",en:"month",hu:"hónap",ipa:"mʌnθ",ph:"mansz"},
+{t:"Idő és mennyiség",en:"week",hu:"hét",ipa:"wiːk",ph:"vík"},
+{t:"Idő és mennyiség",en:"day",hu:"nap",ipa:"deɪ",ph:"dej"},
+{t:"Idő és mennyiség",en:"hour",hu:"óra",ipa:"ˈaʊə",ph:"auö"},
+{t:"Idő és mennyiség",en:"minute",hu:"perc",ipa:"ˈmɪnɪt",ph:"minit"},
+{t:"Idő és mennyiség",en:"today",hu:"ma",ipa:"təˈdeɪ",ph:"tödej"},
+{t:"Idő és mennyiség",en:"tomorrow",hu:"holnap",ipa:"təˈmɒrəʊ",ph:"tömorou"},
+{t:"Idő és mennyiség",en:"yesterday",hu:"tegnap",ipa:"ˈjestədeɪ",ph:"jesztödej"},
+{t:"Idő és mennyiség",en:"now",hu:"most",ipa:"naʊ",ph:"nau"},
+{t:"Idő és mennyiség",en:"soon",hu:"hamarosan",ipa:"suːn",ph:"szún"},
+{t:"Idő és mennyiség",en:"always",hu:"mindig",ipa:"ˈɔːlweɪz",ph:"ólvejz"},
+{t:"Idő és mennyiség",en:"never",hu:"soha",ipa:"ˈnevə",ph:"nevö"},
+{t:"Idő és mennyiség",en:"often",hu:"gyakran",ipa:"ˈɒfn",ph:"ofn"},
+{t:"Idő és mennyiség",en:"sometimes",hu:"néha",ipa:"ˈsʌmtaɪmz",ph:"szamtájmz"},
+{t:"Idő és mennyiség",en:"usually",hu:"általában",ipa:"ˈjuːʒuəli",ph:"júzsuöli"},
+{t:"Idő és mennyiség",en:"already",hu:"már",ipa:"ɔːlˈredi",ph:"ólredi"},
+{t:"Idő és mennyiség",en:"yet",hu:"még",ipa:"jet",ph:"jet"},
+{t:"Idő és mennyiség",en:"still",hu:"még mindig",ipa:"stɪl",ph:"sztil"},
+{t:"Idő és mennyiség",en:"again",hu:"újra",ipa:"əˈɡen",ph:"ögen"},
+{t:"Idő és mennyiség",en:"before",hu:"előtt",ipa:"bɪˈfɔː",ph:"bifó"},
+{t:"Idő és mennyiség",en:"after",hu:"után",ipa:"ˈɑːftə",ph:"áftö"},
+{t:"Idő és mennyiség",en:"during",hu:"alatt, közben",ipa:"ˈdjʊərɪŋ",ph:"djuörin"},
+{t:"Idő és mennyiség",en:"until",hu:"amíg, -ig",ipa:"ənˈtɪl",ph:"öntil"},
+{t:"Idő és mennyiség",en:"since",hu:"óta",ipa:"sɪns",ph:"szinsz"},
+{t:"Idő és mennyiség",en:"number",hu:"szám",ipa:"ˈnʌmbə",ph:"nambö"},
+{t:"Idő és mennyiség",en:"amount",hu:"összeg, mennyiség",ipa:"əˈmaʊnt",ph:"ömaunt"},
+{t:"Idő és mennyiség",en:"half",hu:"fél",ipa:"hɑːf",ph:"háf"},
+{t:"Idő és mennyiség",en:"percentage",hu:"százalék",ipa:"pəˈsentɪdʒ",ph:"pöszentidzs"},
+{t:"Idő és mennyiség",en:"average",hu:"átlag",ipa:"ˈævərɪdʒ",ph:"evöridzs"},
+{t:"Idő és mennyiség",en:"total number",hu:"teljes szám",ipa:"ˌtəʊtl ˈnʌmbə",ph:"toutl nambö"},
+{t:"Idő és mennyiség",en:"most",hu:"legtöbb",ipa:"məʊst",ph:"mouszt"},
+{t:"Idő és mennyiség",en:"least",hu:"legkevesebb",ipa:"liːst",ph:"líszt"},
+{t:"Idő és mennyiség",en:"approximately",hu:"körülbelül",ipa:"əˈprɒksɪmətli",ph:"öprokszimötli"},
+{t:"Emberek és kommunikáció",en:"person",hu:"személy",ipa:"ˈpɜːsn",ph:"pőszn"},
+{t:"Emberek és kommunikáció",en:"people",hu:"emberek",ipa:"ˈpiːpl",ph:"pípl"},
+{t:"Emberek és kommunikáció",en:"man",hu:"férfi",ipa:"mæn",ph:"men"},
+{t:"Emberek és kommunikáció",en:"woman",hu:"nő",ipa:"ˈwʊmən",ph:"vumön"},
+{t:"Emberek és kommunikáció",en:"child",hu:"gyermek",ipa:"tʃaɪld",ph:"csájld"},
+{t:"Emberek és kommunikáció",en:"family",hu:"család",ipa:"ˈfæməli",ph:"femöli"},
+{t:"Emberek és kommunikáció",en:"friend",hu:"barát",ipa:"frend",ph:"frend"},
+{t:"Emberek és kommunikáció",en:"colleague",hu:"munkatárs",ipa:"ˈkɒliːɡ",ph:"kolíg"},
+{t:"Emberek és kommunikáció",en:"team",hu:"csapat",ipa:"tiːm",ph:"tím"},
+{t:"Emberek és kommunikáció",en:"manager",hu:"vezető",ipa:"ˈmænɪdʒə",ph:"menidzsö"},
+{t:"Emberek és kommunikáció",en:"boss",hu:"főnök",ipa:"bɒs",ph:"bosz"},
+{t:"Emberek és kommunikáció",en:"staff",hu:"személyzet",ipa:"stɑːf",ph:"sztáf"},
+{t:"Emberek és kommunikáció",en:"meeting",hu:"értekezlet",ipa:"ˈmiːtɪŋ",ph:"míting"},
+{t:"Emberek és kommunikáció",en:"appointment",hu:"megbeszélt időpont",ipa:"əˈpɔɪntmənt",ph:"öpojntmönt"},
+{t:"Emberek és kommunikáció",en:"email",hu:"e-mail",ipa:"ˈiːmeɪl",ph:"ímejl"},
+{t:"Emberek és kommunikáció",en:"letter",hu:"levél",ipa:"ˈletə",ph:"letö"},
+{t:"Emberek és kommunikáció",en:"message",hu:"üzenet",ipa:"ˈmesɪdʒ",ph:"meszidzs"},
+{t:"Emberek és kommunikáció",en:"phone call",hu:"telefonhívás",ipa:"ˈfəʊn kɔːl",ph:"foun kól"},
+{t:"Emberek és kommunikáció",en:"question",hu:"kérdés",ipa:"ˈkwestʃən",ph:"kvescsön"},
+{t:"Emberek és kommunikáció",en:"answer",hu:"válasz",ipa:"ˈɑːnsə",ph:"ánszö"},
+{t:"Emberek és kommunikáció",en:"information",hu:"információ",ipa:"ˌɪnfəˈmeɪʃn",ph:"infömejsn"},
+{t:"Emberek és kommunikáció",en:"news",hu:"hír",ipa:"njuːz",ph:"njúz"},
+{t:"Emberek és kommunikáció",en:"problem",hu:"probléma",ipa:"ˈprɒbləm",ph:"problöm"},
+{t:"Emberek és kommunikáció",en:"solution",hu:"megoldás",ipa:"səˈluːʃn",ph:"szölúsn"},
+{t:"Emberek és kommunikáció",en:"reason",hu:"ok, indok",ipa:"ˈriːzn",ph:"rízn"},
+{t:"Emberek és kommunikáció",en:"result",hu:"eredmény",ipa:"rɪˈzʌlt",ph:"rizalt"},
+{t:"Emberek és kommunikáció",en:"example",hu:"példa",ipa:"ɪɡˈzɑːmpl",ph:"igzámpl"},
+{t:"Emberek és kommunikáció",en:"idea",hu:"ötlet",ipa:"aɪˈdɪə",ph:"ájdiö"},
+{t:"Emberek és kommunikáció",en:"opinion",hu:"vélemény",ipa:"əˈpɪniən",ph:"öpiniön"},
+{t:"Emberek és kommunikáció",en:"advice",hu:"tanács",ipa:"ədˈvaɪs",ph:"ödvájsz"},
+{t:"Emberek és kommunikáció",en:"decision",hu:"döntés",ipa:"dɪˈsɪʒn",ph:"diszizsn"},
+{t:"Emberek és kommunikáció",en:"change",hu:"változás",ipa:"tʃeɪndʒ",ph:"csejndzs"},
+{t:"Emberek és kommunikáció",en:"way",hu:"mód, út",ipa:"weɪ",ph:"vej"},
+{t:"Emberek és kommunikáció",en:"thing",hu:"dolog",ipa:"θɪŋ",ph:"szing"},
+{t:"Emberek és kommunikáció",en:"part",hu:"rész",ipa:"pɑːt",ph:"pát"},
+{t:"Emberek és kommunikáció",en:"place",hu:"hely",ipa:"pleɪs",ph:"plejsz"},
+{t:"Emberek és kommunikáció",en:"area",hu:"terület",ipa:"ˈeəriə",ph:"eöriö"},
+{t:"Emberek és kommunikáció",en:"country",hu:"ország",ipa:"ˈkʌntri",ph:"kantri"},
+{t:"Emberek és kommunikáció",en:"office",hu:"iroda",ipa:"ˈɒfɪs",ph:"ofisz"},
+{t:"Emberek és kommunikáció",en:"document",hu:"dokumentum",ipa:"ˈdɒkjumənt",ph:"dokjumönt"},
+{t:"Emberek és kommunikáció",en:"file",hu:"fájl, akta",ipa:"faɪl",ph:"fájl"},
+{t:"Emberek és kommunikáció",en:"list",hu:"lista",ipa:"lɪst",ph:"liszt"},
+{t:"Emberek és kommunikáció",en:"detail",hu:"részlet",ipa:"ˈdiːteɪl",ph:"dítejl"},
+{t:"Emberek és kommunikáció",en:"purpose",hu:"cél",ipa:"ˈpɜːpəs",ph:"pőpösz"},
+{t:"Emberek és kommunikáció",en:"responsibility",hu:"felelősség",ipa:"rɪˌspɒnsəˈbɪləti",ph:"riszponszöbiliti"}
+];
+const SEED_VERSION = 2;
+
+const KEY = "angol_szavak_v1";
+const PREF = "angol_szavak_pref_v1";
+const VKEY = "angol_szavak_seed_version";
+let seedAdded = 0;
+
+let words = load();
+let prefs = loadPrefs();
+let order = [];        // aktuális, szűrt (esetleg kevert) indexlista
+let pos = 0;
+let shuffle = !!prefs.shuffle;
+
+/* Betöltés + frissítés: ha új szócsomag érkezett a programmal, azt beolvasztjuk
+   a meglévő listába. A felhasználó saját szavai és törlései megmaradnak. */
+function load(){
+  let stored = null;
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){
+      const d = JSON.parse(raw);
+      if(Array.isArray(d) && d.length) stored = d.map(normalize);
+    }
+  }catch(e){ console.warn("Betöltési hiba:", e); }
+
+  if(!stored) return SEED.map(normalize);
+
+  let v = 0;
+  try{ v = parseInt(localStorage.getItem(VKEY) || "0", 10) || 0; }catch(e){}
+  if(v >= SEED_VERSION) return stored;
+
+  const have = new Set(stored.map(w => w.en.toLowerCase()));
+  SEED.forEach(s=>{
+    if(!have.has(s.en.toLowerCase())){ stored.push(normalize(s)); have.add(s.en.toLowerCase()); seedAdded++; }
+  });
+  try{ localStorage.setItem(VKEY, String(SEED_VERSION)); }catch(e){}
+  return stored;
+}
+function normalize(w){
+  return {
+    t:  String(w.t   || "Egyéb").trim(),
+    en: String(w.en  || "").trim(),
+    hu: String(w.hu  || "").trim(),
+    ipa:String(w.ipa || "").trim(),
+    ph: String(w.ph  || "").trim()
+  };
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(words)); }
+  catch(e){ setStatus("Nem sikerült menteni a böngészőbe."); }
+}
+function loadPrefs(){
+  try{ return JSON.parse(localStorage.getItem(PREF)) || {}; }catch(e){ return {}; }
+}
+function savePrefs(){
+  try{ localStorage.setItem(PREF, JSON.stringify(prefs)); }catch(e){}
+}
+
+/* ============================ DOM ============================ */
+const $ = id => document.getElementById(id);
+const card=$("card"), cEn=$("cEn"), cHu=$("cHu"), cPh=$("cPh"), cTopic=$("cTopic"), cCount=$("cCount");
+const topicFilter=$("topicFilter"), statusEl=$("status");
+
+/* ============================ NÉZETEK ============================ */
+document.querySelectorAll(".tab").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    const v = b.dataset.view;
+    $("view-learn").classList.toggle("hidden", v!=="learn");
+    $("view-manage").classList.toggle("hidden", v!=="manage");
+    if(v==="manage") renderManage();
+  };
+});
+
+/* ============================ TÉMÁK ============================ */
+function topics(){
+  return [...new Set(words.map(w=>w.t))].sort((a,b)=>a.localeCompare(b,"hu"));
+}
+function fillTopicSelects(){
+  const ts = topics();
+  const cur = topicFilter.value || prefs.topic || "__all";
+  topicFilter.innerHTML = `<option value="__all">Összes téma (${words.length})</option>` +
+    ts.map(t=>`<option value="${esc(t)}">${esc(t)} (${words.filter(w=>w.t===t).length})</option>`).join("");
+  topicFilter.value = ts.includes(cur)||cur==="__all" ? cur : "__all";
+
+  const mf = $("mFilter"), mcur = mf.value || "__all";
+  mf.innerHTML = `<option value="__all">Összes téma</option>` + ts.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  mf.value = ts.includes(mcur)||mcur==="__all" ? mcur : "__all";
+
+  const ft = $("fTopic"), fcur = ft.value;
+  ft.innerHTML = ts.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  if(ts.includes(fcur)) ft.value = fcur;
+
+  const isc = $("ipaScope"), icur = isc.value;
+  isc.innerHTML = `<option value="__all">Összes szó (${words.length}) — ez sokáig tart</option>` +
+    ts.map(t=>`<option value="${esc(t)}">${esc(t)} (${words.filter(w=>w.t===t).length})</option>`).join("");
+  isc.value = ts.includes(icur)||icur==="__all" ? icur : "__all";
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
+/* ============================ SORREND ============================ */
+function buildOrder(keepWord){
+  const cur = keepWord || currentWord();
+  const f = topicFilter.value;
+  order = words.map((w,i)=>i).filter(i => f==="__all" || words[i].t===f);
+  if(shuffle){
+    for(let i=order.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [order[i],order[j]] = [order[j],order[i]];
+    }
+  }
+  pos = 0;
+  if(cur){
+    const idx = words.indexOf(cur);
+    const p = order.indexOf(idx);
+    if(p>=0) pos = p;
+  }
+  render();
+}
+function currentWord(){
+  if(!order.length) return null;
+  return words[order[pos]] || null;
+}
+
+/* ============================ MEGJELENÍTÉS ============================ */
+function render(){
+  const w = currentWord();
+  if(!w){
+    cEn.textContent="Nincs szó"; cHu.textContent=""; cPh.textContent="";
+    cTopic.textContent=""; cCount.textContent="0 / 0";
+    return;
+  }
+  cEn.textContent = w.en;
+  cHu.textContent = w.hu;
+  cPh.innerHTML = (w.ipa ? "/"+esc(w.ipa)+"/" : "") +
+                  (w.ipa && w.ph ? " &nbsp;·&nbsp; " : "") +
+                  (w.ph ? "<b>"+esc(w.ph)+"</b>" : "");
+  cTopic.textContent = w.t;
+  cCount.textContent = (pos+1) + " / " + order.length;
+}
+
+function go(delta){
+  if(!order.length) return;
+  pos = (pos + delta + order.length) % order.length;
+  render();
+  if(autoSpeak) speakCurrent();
+}
+
+/* ============================ BESZÉD ============================ */
+const synth = window.speechSynthesis;
+let voices = [], chosenVoice = null, speaking = false, slowOnly = !!prefs.slowOnly;
+let autoSpeak = prefs.autoSpeak !== false;
+let source = prefs.source || "auto";   // auto | rec | gt | gc | browser
+
+/* A böngészőhangok minősége nagyon eltérő. A Google és a „Natural/Online”
+   neurális hangok jók, a régi beépítettek (Hazel, David, Zira) gépiesek. */
+function rankVoice(v){
+  const n = (v.name||"").toLowerCase(), l = (v.lang||"").toLowerCase();
+  let s = 0;
+  if(l.startsWith("en-gb")) s += 100;
+  else if(l.startsWith("en")) s += 15;
+  if(/google/.test(n))                       s += 45;   // Chrome: Google UK English
+  if(/natural|neural|online|premium|enhanced/.test(n)) s += 40;   // Edge/Apple neurális
+  if(/sonia|ryan|libby|thomas|arthur|serena|kate|daniel|oliver|maisie/.test(n)) s += 15;
+  if(/hazel|david|zira|mark|susan|george/.test(n)) s -= 25;       // régi, gépies
+  if(/compact|eloquence|espeak/.test(n))     s -= 40;
+  return s;
+}
+function isGoodVoice(v){ return rankVoice(v) >= 100; }
+function loadVoices(){
+  voices = (synth.getVoices()||[]).filter(v => (v.lang||"").toLowerCase().startsWith("en"));
+  voices.sort((a,b)=> rankVoice(b)-rankVoice(a));
+  const sel = $("voiceSel");
+  if(!voices.length){
+    sel.innerHTML = "<option>Nincs elérhető angol hang</option>";
+    chosenVoice = null;
+    return;
+  }
+  sel.innerHTML = voices.map((v,i)=>
+    `<option value="${i}">${isGoodVoice(v)?"★ ":""}${esc(v.name)} — ${esc(v.lang)}</option>`).join("");
+  let idx = 0;
+  if(prefs.voice){
+    const f = voices.findIndex(v => v.name===prefs.voice);
+    if(f>=0) idx = f;
+  }
+  sel.value = String(idx);
+  chosenVoice = voices[idx];
+}
+synth.addEventListener ? synth.addEventListener("voiceschanged", loadVoices) : (synth.onvoiceschanged = loadVoices);
+loadVoices();
+setTimeout(loadVoices, 400);   // néhány böngésző késve tölti be a hanglistát
+
+$("voiceSel").onchange = e=>{
+  chosenVoice = voices[+e.target.value] || null;
+  if(chosenVoice){ prefs.voice = chosenVoice.name; savePrefs(); }
+  setStatus("");
+};
+
+/* --- hangforrás --- */
+let currentAudio = null;
+let playToken = 0;
+const sleep = ms => new Promise(r=>setTimeout(r, ms));
+
+/* ---------- 1. Emberi brit felvétel (Wiktionary, dictionaryapi.dev) ----------
+   Igazi brit anyanyelvi beszélő hangja — ez a legjobb, ami gép nélkül kapható.
+   Nem minden szóhoz van UK felvétel; ilyenkor a lánc továbblép. */
+const REC_KEY = "angol_szavak_rec_v1";
+let recCache = {};
+try{ recCache = JSON.parse(localStorage.getItem(REC_KEY)) || {}; }catch(e){ recCache = {}; }
+function saveRec(){ try{ localStorage.setItem(REC_KEY, JSON.stringify(recCache)); }catch(e){} }
+
+async function recUrl(text){
+  const k = text.toLowerCase();
+  if(k in recCache){
+    if(!recCache[k]) throw new Error("nincs brit felvétel ehhez a szóhoz");
+    return recCache[k];
+  }
+  const res = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(k));
+  if(!res.ok){ recCache[k]=""; saveRec(); throw new Error("nincs a szótárban (" + res.status + ")"); }
+  const data = await res.json();
+  let url = "";
+  (Array.isArray(data)?data:[]).forEach(e=>{
+    (e.phonetics||[]).forEach(p=>{
+      if(!url && p.audio && /-uk\.mp3$/i.test(p.audio)) url = p.audio;
+    });
+  });
+  recCache[k] = url; saveRec();
+  if(!url) throw new Error("csak nem-brit felvétel van");
+  return url;
+}
+
+/* ---------- 2. Google Fordító hangja ----------
+   FONTOS: a translate.googleapis.com + client=gtx végpont az, ami böngészőből
+   is kiszolgál (audio/mpeg). A translate.google.com + tw-ob üres választ ad —
+   emiatt némult el korábban. A tw-ob csak tartalék változatként marad benn. */
+const GT_HOSTS = {
+  gt:  { host:"https://translate.googleapis.com/translate_tts", client:"gtx"   },
+  gt2: { host:"https://translate.google.com/translate_tts",     client:"tw-ob" }
+};
+function gtUrl(text, slow, kind){
+  const c = GT_HOSTS[kind] || GT_HOSTS.gt;
+  const p = new URLSearchParams({
+    ie:"UTF-8", client:c.client, tl:"en-GB", q:text,
+    ttsspeed: slow ? "0.24" : "1",
+    total:"1", idx:"0", textlen:String(text.length)
+  });
+  return c.host + "?" + p.toString();
+}
+
+/* ---------- 3. Google Cloud Text-to-Speech (hivatalos, kulcs kell) ---------- */
+const gcCache = new Map();
+async function gcUrl(text, rate){
+  const key = ($("gcKey").value||"").trim();
+  if(!key) throw new Error("nincs megadva API-kulcs");
+  const voice = $("gcVoice").value;
+  const ck = voice+"|"+rate.toFixed(2)+"|"+text;
+  if(gcCache.has(ck)) return gcCache.get(ck);
+  const res = await fetch("https://texttospeech.googleapis.com/v1/text:synthesize?key="+encodeURIComponent(key), {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      input:{ text },
+      voice:{ languageCode:"en-GB", name:voice },
+      audioConfig:{ audioEncoding:"MP3", speakingRate:Math.max(0.25,Math.min(4,rate)), pitch:0 }
+    })
+  });
+  if(!res.ok){
+    let msg = res.status + " " + res.statusText;
+    try{ const j = await res.json(); if(j.error && j.error.message) msg = j.error.message; }catch(e){}
+    throw new Error(msg);
+  }
+  const j = await res.json();
+  if(!j.audioContent) throw new Error("üres válasz");
+  const url = "data:audio/mp3;base64," + j.audioContent;
+  gcCache.set(ck, url);
+  return url;
+}
+
+/* ---------- lejátszás ---------- */
+function stopAudio(){
+  if(currentAudio){ try{ currentAudio.pause(); currentAudio.src=""; }catch(e){} currentAudio=null; }
+  try{ synth.cancel(); }catch(e){}
+}
+
+/* betöltés-ellenőrzés lejátszás nélkül: így derül ki, hogy egy forrás él-e */
+function probe(url, ms){
+  return new Promise((resolve, reject)=>{
+    const a = new Audio(); a.preload = "auto";
+    let done = false;
+    const good = ()=>{ if(!done){ done=true; clearTimeout(t); resolve(url); } };
+    const bad  = ()=>{ if(!done){ done=true; clearTimeout(t); reject(new Error("a hangfájl nem tölthető be")); } };
+    const t = setTimeout(()=>{ if(!done){ done=true; reject(new Error("időtúllépés")); } }, ms||7000);
+    a.addEventListener("loadedmetadata", good);
+    a.addEventListener("canplaythrough", good);
+    a.addEventListener("error", bad);
+    a.src = url;
+  });
+}
+
+function playUrl(url, rate){
+  return new Promise((resolve, reject)=>{
+    const a = new Audio();
+    a.preload = "auto";
+    a.preservesPitch = true; a.mozPreservesPitch = true; a.webkitPreservesPitch = true;
+    const apply = ()=>{ try{ a.playbackRate = rate; }catch(e){} };
+    a.addEventListener("loadedmetadata", apply);
+    a.onended = ()=>{ if(currentAudio===a) currentAudio=null; resolve(); };
+    a.onerror  = ()=> reject(new Error("a hangfájl nem tölthető be"));
+    a.src = url;
+    currentAudio = a;
+    apply();
+    const p = a.play();
+    if(p && p.catch) p.catch(err=>{
+      reject(err && err.name==="NotAllowedError"
+        ? new Error("a böngésző csak koppintás után enged hangot lejátszani")
+        : err);
+    });
+  });
+}
+
+function speakBrowser(text, rate){
+  return new Promise(resolve=>{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = (chosenVoice && chosenVoice.lang) || "en-GB";
+    if(chosenVoice) u.voice = chosenVoice;
+    u.rate = rate; u.pitch = 1; u.volume = 1;
+    u.onend = resolve; u.onerror = resolve;
+    synth.speak(u);
+  });
+}
+
+/* ---------- forráslánc ---------- */
+const SOURCES = {
+  gt:      { label:"Google Fordító hangja" },
+  gt2:     { label:"Google Fordító (tartalék végpont)" },
+  gc:      { label:"Google Cloud TTS" },
+  rec:     { label:"emberi brit felvétel" },
+  browser: { label:"böngésző hangja" }
+};
+const AUTO_CHAIN = ["gt","gt2","gc","rec","browser"];
+function chainFor(sel){
+  if(sel === "auto")    return AUTO_CHAIN.slice();
+  if(sel === "browser") return ["browser"];
+  if(sel === "gt")      return ["gt","gt2","browser"];
+  return [sel, "browser"];
+}
+
+/* egy forrás URL-je adott tempóhoz (a böngésző nem URL-alapú) */
+async function urlFor(kind, text, slow, rate){
+  if(kind === "rec")               return recUrl(text);
+  if(kind === "gt" || kind==="gt2")return gtUrl(text, slow, kind);
+  if(kind === "gc")                return gcUrl(text, rate);
+  throw new Error("ismeretlen forrás");
+}
+/* a felvételnél és a Fordító lassú sávjánál a lejátszási sebesség finomhangol */
+function rateFor(kind, slow, rate){
+  if(kind === "gc") return 1;                                  // natív speakingRate
+  if((kind === "gt" || kind === "gt2") && slow) return Math.max(0.5, Math.min(2, rate/0.6));
+  return rate;                                                 // felvétel / normál sáv
+}
+
+let lastKind = null;
+function showKind(kind, note){
+  lastKind = kind;
+  $("srcNow").innerHTML = kind
+    ? "Most szól: <b>" + SOURCES[kind].label + "</b>" + (note ? " <span class='badge'>"+esc(note)+"</span>" : "")
+    : "";
+}
+
+async function speakCurrent(){
+  const w = currentWord();
+  if(!w || !w.en) return;
+  return speakWord(w.en);
+}
+
+async function speakWord(text){
+  const token = ++playToken;
+  stopAudio();
+  const slowR = parseFloat($("rateSlow").value);
+  const fastR = parseFloat($("rateFast").value);
+  speaking = true; card.classList.add("speaking");
+  pauseRecog();
+
+  const problems = [];
+  let kind = null, slowUrl = null;
+
+  for(const k of chainFor(source)){
+    if(k === "browser"){ kind = "browser"; break; }
+    try{
+      slowUrl = await urlFor(k, text, true, slowR);
+      if(token !== playToken) return;
+      await probe(slowUrl);
+      kind = k; break;
+    }catch(e){
+      problems.push(SOURCES[k].label + ": " + e.message);
+    }
+  }
+  if(token !== playToken) return;
+
+  try{
+    if(kind === "browser"){
+      showKind("browser", problems.length ? "a Google források nem elérhetők" : "");
+      await speakBrowser(text, slowR);
+      if(token !== playToken) return;
+      if(!slowOnly){ await sleep(300); if(token !== playToken) return; await speakBrowser(text, fastR); }
+    }else{
+      showKind(kind);
+      await playUrl(slowUrl, rateFor(kind, true, slowR));
+      if(token !== playToken) return;
+      if(!slowOnly){
+        await sleep(300);
+        if(token !== playToken) return;
+        const fastUrl = await urlFor(kind, text, false, fastR);
+        await playUrl(fastUrl, rateFor(kind, false, fastR));
+      }
+    }
+    if(problems.length && source === "auto") $("srcMsg").textContent = problems.join(" · ");
+  }catch(err){
+    if(token === playToken) setStatus("Lejátszási hiba: " + err.message);
+  }finally{
+    if(token === playToken){
+      speaking = false; card.classList.remove("speaking");
+      resumeRecog();
+      prefetchNext();
+    }
+  }
+}
+
+/* a következő szó hangját előre melegítjük, hogy ne akadjon a lapozás */
+const prefetched = new Set();
+function prefetchNext(){
+  if(!order.length || !lastKind || lastKind==="browser" || lastKind==="gc") return;
+  const w = words[order[(pos+1) % order.length]];
+  if(!w || !w.en || prefetched.has(lastKind+"|"+w.en)) return;
+  prefetched.add(lastKind+"|"+w.en);
+  urlFor(lastKind, w.en, true, 0.6)
+    .then(u=>{ const a=new Audio(); a.preload="auto"; a.src=u; })
+    .catch(()=>{});
+}
+
+/* ---------- vezérlők ---------- */
+$("srcSel").onchange = e=>{
+  source = e.target.value;
+  prefs.source = source; savePrefs();
+  gcCache.clear(); prefetched.clear();
+  $("srcMsg").textContent = ""; $("srcNow").textContent = "";
+  setStatus("");
+};
+$("gcKey").oninput    = e=>{ prefs.gcKey = e.target.value; savePrefs(); gcCache.clear(); };
+$("gcVoice").onchange = e=>{ prefs.gcVoice = e.target.value; savePrefs(); gcCache.clear(); };
+
+$("btnTest").onclick = ()=> speakCurrent();
+
+$("btnDiag").onclick = async ()=>{
+  const out = $("diagOut");
+  out.classList.remove("hidden");
+  out.textContent = "Tesztelés folyamatban…";
+  const word = (currentWord() && currentWord().en) || "airport";
+  const lines = ["Tesztszó: " + word, "Oldal: " + location.protocol + "//" + (location.host||"(helyi fájl)"), ""];
+  for(const k of ["gt","gt2","gc","rec"]){
+    try{
+      const u = await urlFor(k, word, false, 1);
+      await probe(u, 8000);
+      lines.push("✔ " + SOURCES[k].label);
+    }catch(e){
+      lines.push("✖ " + SOURCES[k].label + " — " + e.message);
+    }
+  }
+  const good = voices.filter(isGoodVoice);
+  lines.push((good.length ? "✔ " : "⚠ ") + "böngésző hangja — " +
+    (voices.length ? (chosenVoice?chosenVoice.name:"?") + (good.length?" (jó minőségű elérhető: "+good.length+" db)":" — nincs jó minőségű hang, válts Chrome/Edge-re vagy adj meg Cloud kulcsot") : "nincs angol hang"));
+  if(location.protocol === "file:")
+    lines.push("", "⚠ A fájlt helyben nyitottad meg (file://). Több forrás emiatt tiltott lehet — tedd webcímre, vagy használj Cloud kulcsot.");
+  out.textContent = lines.join("\n");
+};
+
+/* ============================ HANGFELISMERÉS („next”) ============================ */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null, autoOn = false, recogRunning = false, recogPaused = false, restartTimer = null;
+
+function initRecog(){
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = "en-GB";
+  r.continuous = true;
+  r.interimResults = true;
+  r.maxAlternatives = 3;
+
+  r.onstart = ()=>{ recogRunning = true; };
+  r.onresult = ev=>{
+    if(speaking) return;                    // ne reagáljon a saját felolvasásra
+    for(let i=ev.resultIndex; i<ev.results.length; i++){
+      const res = ev.results[i];
+      for(let a=0; a<res.length; a++){
+        const txt = (res[a].transcript||"").toLowerCase().trim();
+        if(/\b(next|nekst|necks|tovább|tovabb)\b/.test(txt)){
+          if(res.isFinal || res[a].confidence > 0.5 || res[a].confidence === 0){
+            setStatus("„next” ✔");
+            go(1);
+            try{ r.abort(); }catch(e){}    // eredmény-puffer ürítése
+            return;
+          }
+        }
+      }
+    }
+  };
+  r.onerror = ev=>{
+    if(ev.error === "not-allowed" || ev.error === "service-not-allowed"){
+      autoOn = false; recogRunning = false; syncAutoBtn();
+      setStatus("A mikrofon engedélye hiányzik — engedélyezd a böngészőben.");
+    }else if(ev.error === "no-speech" || ev.error === "aborted" || ev.error === "network"){
+      /* ezek normálisak, az onend újraindít */
+    }else{
+      setStatus("Hangfelismerési hiba: " + ev.error);
+    }
+  };
+  r.onend = ()=>{
+    recogRunning = false;
+    if(autoOn && !recogPaused){
+      clearTimeout(restartTimer);
+      restartTimer = setTimeout(()=>{ try{ r.start(); }catch(e){} }, 250);
+    }
+  };
+  return r;
+}
+function pauseRecog(){
+  if(!autoOn || !recog) return;
+  recogPaused = true;
+  try{ recog.abort(); }catch(e){}
+}
+function resumeRecog(){
+  if(!autoOn || !recog) return;
+  recogPaused = false;
+  clearTimeout(restartTimer);
+  restartTimer = setTimeout(()=>{ if(autoOn && !recogRunning){ try{ recog.start(); }catch(e){} } }, 350);
+}
+function syncAutoBtn(){
+  const b = $("btnAuto");
+  b.textContent = "🎤 Auto mód: " + (autoOn ? "BE" : "KI");
+  b.classList.toggle("on", autoOn);
+}
+$("btnAuto").onclick = ()=>{
+  if(!SR){
+    setStatus("Ez a böngésző nem támogatja a hangfelismerést. Használj Chrome-ot vagy Edge-et (iPhone Safariban nem működik).");
+    return;
+  }
+  autoOn = !autoOn;
+  syncAutoBtn();
+  if(autoOn){
+    if(!recog) recog = initRecog();
+    recogPaused = false;
+    try{ recog.start(); setStatus("Hallgatlak — mondd: „next”."); }
+    catch(e){ setStatus("Nem indult el a mikrofon: " + e.message); }
+  }else{
+    try{ recog && recog.abort(); }catch(e){}
+    clearTimeout(restartTimer);
+    setStatus("");
+  }
+};
+
+/* ============================ VEZÉRLŐK ============================ */
+$("btnPrev").onclick = ()=>go(-1);
+$("btnNext").onclick = ()=>go(1);
+$("btnSay").onclick  = ()=>speakCurrent();
+
+$("btnAutoSpeak").onclick = ()=>{
+  autoSpeak = !autoSpeak;
+  $("btnAutoSpeak").textContent = "🔁 Auto felolvasás: " + (autoSpeak?"BE":"KI");
+  $("btnAutoSpeak").classList.toggle("on", autoSpeak);
+  prefs.autoSpeak = autoSpeak; savePrefs();
+};
+$("btnSlowOnly").onclick = ()=>{
+  slowOnly = !slowOnly;
+  $("btnSlowOnly").textContent = slowOnly ? "🐢 Csak lassan: BE" : "🐢 Csak lassan";
+  $("btnSlowOnly").classList.toggle("on", slowOnly);
+  $("btnSay").textContent = slowOnly ? "🔊 Felolvasás" : "🔊 Lassan + gyorsan";
+  prefs.slowOnly = slowOnly; savePrefs();
+};
+$("btnShuffle").onclick = ()=>{
+  shuffle = !shuffle;
+  $("btnShuffle").classList.toggle("on", shuffle);
+  prefs.shuffle = shuffle; savePrefs();
+  buildOrder(shuffle ? null : currentWord());
+  setStatus(shuffle ? "Kevert sorrend." : "Eredeti sorrend.");
+};
+topicFilter.onchange = ()=>{ prefs.topic = topicFilter.value; savePrefs(); buildOrder(null); };
+
+$("rateSlow").oninput = e=>{ $("lblSlow").textContent = (+e.target.value).toFixed(2).replace(".",","); prefs.slow=e.target.value; savePrefs(); };
+$("rateFast").oninput = e=>{ $("lblFast").textContent = (+e.target.value).toFixed(2).replace(".",","); prefs.fast=e.target.value; savePrefs(); };
+
+document.addEventListener("keydown", e=>{
+  if(/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if(e.key==="ArrowRight"){ e.preventDefault(); go(1); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); go(-1); }
+  else if(e.key===" "){ e.preventDefault(); speakCurrent(); }
+});
+
+// húzás (swipe)
+let tx=0, ty=0, tracking=false;
+card.addEventListener("touchstart", e=>{ const t=e.changedTouches[0]; tx=t.clientX; ty=t.clientY; tracking=true; }, {passive:true});
+card.addEventListener("touchend", e=>{
+  if(!tracking) return; tracking=false;
+  const t=e.changedTouches[0], dx=t.clientX-tx, dy=t.clientY-ty;
+  if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)*1.5) go(dx<0 ? 1 : -1);
+}, {passive:true});
+card.addEventListener("click", ()=>{ if(!tracking) speakCurrent(); });
+
+let statusTimer=null;
+function setStatus(msg){
+  statusEl.textContent = msg || "";
+  clearTimeout(statusTimer);
+  if(msg) statusTimer = setTimeout(()=>{ if(statusEl.textContent===msg) statusEl.textContent=""; }, 6000);
+}
+
+/* ============================ SZAVAK KEZELÉSE ============================ */
+$("btnAdd").onclick = ()=>{
+  const en = $("fEn").value.trim();
+  const hu = $("fHu").value.trim();
+  if(!en || !hu){ $("addMsg").textContent = "Az angol szó és a magyar jelentés kötelező."; return; }
+  const nt = $("fNewTopic").value.trim();
+  const t  = nt || $("fTopic").value || "Egyéb";
+  if(words.some(w => w.en.toLowerCase()===en.toLowerCase() && w.t===t)){
+    $("addMsg").textContent = "Ez a szó már szerepel ebben a témában.";
+    return;
+  }
+  words.push(normalize({t, en, hu, ipa:$("fIpa").value, ph:$("fPh").value}));
+  save();
+  ["fEn","fHu","fIpa","fPh","fNewTopic"].forEach(id=>$(id).value="");
+  fillTopicSelects();
+  $("fTopic").value = t;
+  renderManage();
+  buildOrder(currentWord());
+  $("addMsg").textContent = "Hozzáadva: " + en + " → " + t;
+  $("fEn").focus();
+};
+
+function renderManage(){
+  fillTopicSelects();
+  const f = $("mFilter").value;
+  const rows = words.map((w,i)=>({w,i})).filter(o => f==="__all" || o.w.t===f);
+  $("mCount").textContent = rows.length;
+  $("mBody").innerHTML = rows.map(o=>`
+    <tr>
+      <td><b>${esc(o.w.en)}</b><br><span style="color:var(--dim);font-size:11px">${esc(o.w.t)}</span></td>
+      <td>${esc(o.w.hu)}</td>
+      <td style="color:var(--dim)">${o.w.ipa?"/"+esc(o.w.ipa)+"/<br>":""}${esc(o.w.ph)}</td>
+      <td class="act"><button class="del" data-i="${o.i}" title="Törlés">✕</button></td>
+    </tr>`).join("") || `<tr><td colspan="4" style="color:var(--dim)">Nincs szó.</td></tr>`;
+
+  $("mBody").querySelectorAll(".del").forEach(b=>{
+    b.onclick = ()=>{
+      const i = +b.dataset.i;
+      if(!confirm("Törlöd ezt: " + words[i].en + "?")) return;
+      words.splice(i,1);
+      save(); fillTopicSelects(); renderManage(); buildOrder(null);
+    };
+  });
+}
+$("mFilter").onchange = renderManage;
+
+/* --- export / import --- */
+$("btnExport").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(words, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  const d = new Date().toISOString().slice(0,10);
+  a.href = URL.createObjectURL(blob);
+  a.download = "angol-szavak-" + d + ".json";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+};
+$("btnImport").onclick = ()=> $("fileIn").click();
+$("fileIn").onchange = e=>{
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    try{
+      const data = JSON.parse(fr.result);
+      if(!Array.isArray(data)) throw new Error("A fájl nem szólistát tartalmaz.");
+      let added = 0;
+      data.map(normalize).forEach(n=>{
+        if(!n.en || !n.hu) return;
+        if(words.some(w => w.en.toLowerCase()===n.en.toLowerCase() && w.t===n.t)) return;
+        words.push(n); added++;
+      });
+      save(); fillTopicSelects(); renderManage(); buildOrder(null);
+      $("addMsg").textContent = added + " új szó betöltve (" + (data.length-added) + " már megvolt).";
+    }catch(err){
+      $("addMsg").textContent = "Hibás fájl: " + err.message;
+    }
+    e.target.value = "";
+  };
+  fr.readAsText(file);
+};
+/* ---------- IPA ellenőrzés a Wiktionary szótár alapján ---------- */
+let ipaStop = false, ipaRunning = false, ipaHits = [];
+
+function normIpa(s){                       // összehasonlításhoz: jelölések egységesítése
+  return String(s||"")
+    .replace(/[\/\[\]]/g,"")
+    .replace(/[ˈˌ]/g,"")
+    .replace(/d͡ʒ/g,"dʒ").replace(/t͡ʃ/g,"tʃ")
+    .replace(/ɡ/g,"g")
+    .replace(/\s+/g,"")
+    .trim();
+}
+async function lookupIpa(word){
+  const res = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + encodeURIComponent(word.toLowerCase()));
+  if(!res.ok) return null;
+  const data = await res.json();
+  let uk = "", any = "";
+  (Array.isArray(data)?data:[]).forEach(e=>{
+    (e.phonetics||[]).forEach(p=>{
+      const txt = (p.text||"").replace(/[\/\[\]]/g,"").trim();
+      if(!txt) return;
+      if(!any) any = txt;
+      if(!uk && /-uk\.mp3$/i.test(p.audio||"")) uk = txt;
+    });
+    if(!any && e.phonetic) any = e.phonetic.replace(/[\/\[\]]/g,"").trim();
+  });
+  return uk || any || null;
+}
+
+$("btnIpaStop").onclick = ()=>{ ipaStop = true; };
+
+$("btnIpaCheck").onclick = async ()=>{
+  if(ipaRunning) return;
+  const scope = $("ipaScope").value;
+  const list = words.map((w,i)=>({w,i})).filter(o => scope==="__all" || o.w.t===scope);
+  if(!list.length){ $("ipaMsg").textContent = "Nincs ellenőrizhető szó."; return; }
+
+  ipaRunning = true; ipaStop = false; ipaHits = [];
+  $("ipaWrap").innerHTML = ""; $("ipaApplyRow").classList.add("hidden");
+  let checked=0, missing=0, ok=0;
+
+  for(const o of list){
+    if(ipaStop) break;
+    $("ipaMsg").textContent = `Ellenőrzés: ${checked+1} / ${list.length} — ${o.w.en}  (eltérés: ${ipaHits.length})`;
+    try{
+      const found = await lookupIpa(o.w.en);
+      if(!found){ missing++; }
+      else if(normIpa(found) !== normIpa(o.w.ipa)){ ipaHits.push({i:o.i, en:o.w.en, mine:o.w.ipa, theirs:found}); }
+      else ok++;
+    }catch(e){ missing++; }
+    checked++;
+    await sleep(120);                       // kímélje a szótár szolgáltatását
+  }
+
+  ipaRunning = false;
+  $("ipaMsg").textContent =
+    `Kész: ${checked} ellenőrizve · ${ok} egyezik · ${ipaHits.length} eltér · ${missing} nincs a szótárban` +
+    (ipaStop ? " (leállítva)" : "");
+
+  if(!ipaHits.length){ $("ipaWrap").innerHTML = ""; return; }
+  $("ipaWrap").innerHTML = `<table><thead><tr>
+      <th><input type="checkbox" id="ipaAll" checked></th><th>Szó</th><th>Jelenlegi</th><th>Szótár szerint</th>
+    </tr></thead><tbody>` +
+    ipaHits.map((h,k)=>`<tr>
+      <td><input type="checkbox" class="ipaChk" data-k="${k}" checked></td>
+      <td><b>${esc(h.en)}</b></td>
+      <td style="color:var(--dim)">/${esc(h.mine)}/</td>
+      <td style="color:var(--acc2)">/${esc(h.theirs)}/</td>
+    </tr>`).join("") + `</tbody></table>`;
+  $("ipaApplyRow").classList.remove("hidden");
+  $("ipaAll").onclick = e=>{
+    $("ipaWrap").querySelectorAll(".ipaChk").forEach(c=>{ c.checked = e.target.checked; });
+  };
+};
+
+$("btnIpaApply").onclick = ()=>{
+  let n = 0;
+  $("ipaWrap").querySelectorAll(".ipaChk").forEach(c=>{
+    if(!c.checked) return;
+    const h = ipaHits[+c.dataset.k];
+    if(h && words[h.i] && words[h.i].en === h.en){ words[h.i].ipa = h.theirs; n++; }
+  });
+  save(); renderManage(); buildOrder(currentWord());
+  $("ipaMsg").textContent = n + " átírás frissítve.";
+  $("ipaWrap").innerHTML = ""; $("ipaApplyRow").classList.add("hidden"); ipaHits = [];
+};
+
+$("btnReset").onclick = ()=>{
+  if(!confirm("Biztosan törlöd az összes saját szót, és visszaállítod a demó listát?")) return;
+  words = SEED.map(normalize);
+  save(); fillTopicSelects(); renderManage(); buildOrder(null);
+};
+
+/* ============================ INDÍTÁS ============================ */
+if(prefs.gcKey)   $("gcKey").value = prefs.gcKey;
+if(prefs.gcVoice && [...$("gcVoice").options].some(o=>o.value===prefs.gcVoice)) $("gcVoice").value = prefs.gcVoice;
+if([...$("srcSel").options].some(o=>o.value===source)) $("srcSel").value = source; else source = "auto";
+
+if(prefs.slow){ $("rateSlow").value = prefs.slow; }
+if(prefs.fast){ $("rateFast").value = prefs.fast; }
+$("lblSlow").textContent = (+$("rateSlow").value).toFixed(2).replace(".",",");
+$("lblFast").textContent = (+$("rateFast").value).toFixed(2).replace(".",",");
+$("btnAutoSpeak").textContent = "🔁 Auto felolvasás: " + (autoSpeak?"BE":"KI");
+$("btnAutoSpeak").classList.toggle("on", autoSpeak);
+if(slowOnly){ $("btnSlowOnly").classList.add("on"); $("btnSlowOnly").textContent="🐢 Csak lassan: BE"; $("btnSay").textContent="🔊 Felolvasás"; }
+if(shuffle){ $("btnShuffle").classList.add("on"); }
+syncAutoBtn();
+
+fillTopicSelects();
+if(prefs.topic) topicFilter.value = [...topicFilter.options].some(o=>o.value===prefs.topic) ? prefs.topic : "__all";
+buildOrder(null);
+if(!SR){ $("btnAuto").classList.add("ghost"); }
+if(seedAdded){ save(); setStatus(seedAdded + " új szó került a listádba. Összesen: " + words.length); }
+</script>
+</body>
+</html>
